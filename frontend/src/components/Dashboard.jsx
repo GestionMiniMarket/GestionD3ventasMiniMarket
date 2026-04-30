@@ -12,7 +12,7 @@ export default function Dashboard() {
 
       <div className="card p-6">
         <h3 className="text-xl font-extrabold mb-2" style={{ fontFamily: "'Nunito', sans-serif" }}>
-          Bienvenido al apartado de Dashboard
+          Bienvenido al apartado de Dashboard.
         </h3>
         <p className="text-sm" style={{ color: "var(--text-mid)" }}>
           Aquí podrás visualizar el resumen principal y los indicadores generales del sistema.
