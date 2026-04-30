@@ -1,0 +1,94 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&family=Nunito+Sans:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --green-brand:   #1a6b3c;
+    --green-mid:     #22863e;
+    --green-light:   #2da84f;
+    --green-pale:    #e8f5ed;
+    --gold-accent:   #f5a623;
+    --gold-light:    #fef6e4;
+    --text-dark:     #1a1a2e;
+    --text-mid:      #4a5568;
+    --surface:       #f7f9f7;
+  }
+
+  body {
+    font-family: 'Nunito Sans', sans-serif;
+    background-color: var(--surface);
+    color: var(--text-dark);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: 'Nunito', sans-serif;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm text-white transition-all duration-200 active:scale-95;
+    background-color: var(--green-brand);
+  }
+  .btn-primary:hover {
+    background-color: var(--green-mid);
+    box-shadow: 0 4px 14px rgba(26,107,60,0.35);
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm transition-all duration-200 active:scale-95 border;
+    color: var(--green-brand);
+    border-color: var(--green-brand);
+    background: transparent;
+  }
+  .btn-secondary:hover {
+    background-color: var(--green-pale);
+  }
+
+  .card {
+    @apply bg-white rounded-2xl border border-gray-100 shadow-sm;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm outline-none transition-all duration-150 bg-white;
+    color: var(--text-dark);
+  }
+  .input-field:focus {
+    border-color: var(--green-brand);
+    box-shadow: 0 0 0 3px rgba(26,107,60,0.12);
+  }
+  .input-field::placeholder {
+    color: #a0aec0;
+  }
+
+  .nav-link {
+    @apply flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-150;
+    color: rgba(255,255,255,0.75);
+  }
+  .nav-link:hover {
+    background: rgba(255,255,255,0.12);
+    color: white;
+  }
+  .nav-link.active {
+    background: rgba(255,255,255,0.2);
+    color: white;
+    font-weight: 700;
+  }
+
+  .stat-card {
+    @apply bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col gap-1;
+  }
+
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold;
+  }
+  .badge-green {
+    background-color: var(--green-pale);
+    color: var(--green-brand);
+  }
+  .badge-gold {
+    background-color: var(--gold-light);
+    color: #92610a;
+  }
+}
