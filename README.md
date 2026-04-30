@@ -2,7 +2,7 @@
 
 ## Descripción General
 
-El Sistema de Gestión Minimarket D3 es una plataforma empresarial diseñada para la optimización de procesos operativos en establecimientos minoristas. Desarrollada bajo estándares de ingeniería de software por estudiantes de la Universidad Tecnológica del Perú (UTP), la aplicación garantiza una gestión eficiente de inventarios, ventas y seguridad de la información.
+El Sistema de Gestión Minimarket es una plataforma empresarial diseñada para la optimización de procesos operativos en establecimientos minoristas. Desarrollada bajo estándares de ingeniería de software por estudiantes de la Universidad Tecnológica del Perú, la aplicación garantiza una gestión eficiente de inventarios, ventas y seguridad de la información.
 
 ## Especificaciones Técnicas
 
@@ -12,13 +12,13 @@ La solución se basa en una arquitectura de desacoplamiento entre cliente y serv
 
 * **Frontend**: React 19, Vite, Tailwind CSS.
 * **Backend**: Node.js, Express.
-* **Base de Datos**: MySQL (Relacional).
-* **Seguridad**: Autenticación basada en JSON Web Tokens (JWT) y encriptación Bcrypt.
+* **Base de Datos**: MySQL.
+* **Seguridad**: Autenticación basada en JSON Web Tokens y encriptación Bcrypt.
 
 ## Funcionalidades Core
 
 1. **Seguridad y Acceso**: Sistema de autenticación con control de sesión persistente.
-2. **Control de Acceso Basado en Roles (RBAC)**: Diferenciación de privilegios para perfiles de Administrador, Supervisor y Cajero.
+2. **Control de Acceso Basado en Roles**: Diferenciación de privilegios para perfiles de Administrador, Supervisor y Cajero.
 3. **Gestión de Inventarios**: Módulo completo para el control de stock, categorías y proveedores.
 4. **Procesamiento de Ventas**: Interfaz transaccional para el registro de movimientos comerciales en tiempo real.
 5. **Análisis de Datos**: Dashboard de métricas operativas para la supervisión gerencial.
