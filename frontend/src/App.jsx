@@ -1,14 +1,14 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Login from "./components/Login";
-import Dashboard from "./components/Dashboard";
+import Login from "./pages/LoginPage";
+import Dashboard from "./pages/DashboardPage";
 import PrivateRoute from "./router/PrivateRoute";
-import Layout from "./components/Layout";
-import Productos from "./components/Productos"; 
-import Admin from "./components/Admin";
-import Cajero from "./components/Cajero";
-import Supervisor from "./components/Supervisor";
+import Layout from "./components/layout/MainLayout";
+import Productos from "./pages/InventoryPage"; 
+import Admin from "./pages/AdminPage";
+import Cajero from "./pages/CashierPage";
+import Supervisor from "./pages/SupervisorPage";
 import RoleRoute from "./router/RoleRoute";
-import Usuarios from "./components/Usuarios";
+import Usuarios from "./pages/UsersPage";
 function App() {
   return (
     <BrowserRouter>
