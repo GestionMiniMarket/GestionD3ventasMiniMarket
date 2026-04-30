@@ -1,5 +1,4 @@
 export default function Productos() {
-
   return (
     <div>
       <div className="flex items-start justify-between mb-8">
@@ -8,7 +7,7 @@ export default function Productos() {
             Productos
           </h2>
           <p className="text-sm mt-1" style={{ color: "var(--text-mid)" }}>
-            Gestión de inventario · {mockProducts.length} productos
+            Gestión de inventario
           </p>
         </div>
         <button className="btn-primary">
@@ -18,9 +17,14 @@ export default function Productos() {
           Nuevo producto
         </button>
       </div>
-
-
-
+      <div className="card p-6">
+        <h3 className="text-xl font-extrabold mb-2" style={{ fontFamily: "'Nunito', sans-serif" }}>
+          Bienvenido al apartado de Productos
+        </h3>
+        <p className="text-sm" style={{ color: "var(--text-mid)" }}>
+          Aquí podrás gestionar el inventario y visualizar la información de productos.
+        </p>
+      </div>
     </div>
   );
 }

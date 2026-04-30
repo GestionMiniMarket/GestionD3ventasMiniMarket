@@ -1,6 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Login from "./components/Login";
-import Register from "./components/Register";
 import Dashboard from "./components/Dashboard";
 import PrivateRoute from "./router/PrivateRoute";
 import Layout from "./components/Layout";
@@ -17,7 +16,6 @@ function App() {
 
         {/* PUBLICAS */}
         <Route path="/" element={<Login />} />
-        <Route path="/register" element={<Register />} />
 
         {/* PRIVADAS CON LAYOUT */}
         <Route 

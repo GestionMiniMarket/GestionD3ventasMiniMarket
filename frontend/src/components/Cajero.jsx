@@ -11,6 +11,14 @@ export default function Cajero() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="card p-6 lg:col-span-2">
+          <h3 className="text-xl font-extrabold mb-2" style={{ fontFamily: "'Nunito', sans-serif" }}>
+            Bienvenido al apartado de Cajero
+          </h3>
+          <p className="text-sm" style={{ color: "var(--text-mid)" }}>
+            Desde aquí podrás registrar ventas y gestionar operaciones de caja.
+          </p>
+        </div>
       </div>
     </div>
   );

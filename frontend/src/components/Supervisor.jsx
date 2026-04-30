@@ -10,6 +10,14 @@ export default function Supervisor() {
         </p>
       </div>
 
+      <div className="card p-6">
+        <h3 className="text-xl font-extrabold mb-2" style={{ fontFamily: "'Nunito', sans-serif" }}>
+          Bienvenido al apartado de Supervisor
+        </h3>
+        <p className="text-sm" style={{ color: "var(--text-mid)" }}>
+          Aquí podrás revisar reportes y supervisar el flujo general de operaciones.
+        </p>
+      </div>
     </div>
   );
 }
