@@ -1,48 +1,49 @@
 CREATE DATABASE minimarket_db;
 USE minimarket_db;
 
--- Roles
 CREATE TABLE roles (
   id INT AUTO_INCREMENT PRIMARY KEY,
   nombre VARCHAR(50) NOT NULL
 );
 
-INSERT INTO roles (nombre) VALUES ('Administrador'), ('Cajero'), ('Supervisor');
+INSERT INTO roles (nombre) VALUES
+('Administrador'),
+('Cajero'),
+('Supervisor');
 
--- Usuarios
 CREATE TABLE usuarios (
   id INT AUTO_INCREMENT PRIMARY KEY,
   nombre VARCHAR(100) NOT NULL,
   email VARCHAR(100) NOT NULL UNIQUE,
   password VARCHAR(255) NOT NULL,
   rol_id INT NOT NULL,
+  activo TINYINT(1) NOT NULL DEFAULT 1,
   creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (rol_id) REFERENCES roles(id)
 );
 
--- Categorías de productos
 CREATE TABLE categorias (
   id INT AUTO_INCREMENT PRIMARY KEY,
   nombre VARCHAR(100) NOT NULL
 );
 
--- Productos
 CREATE TABLE productos (
   id INT AUTO_INCREMENT PRIMARY KEY,
   nombre VARCHAR(150) NOT NULL,
+  descripcion TEXT,
   precio DECIMAL(10,2) NOT NULL,
   stock INT NOT NULL DEFAULT 0,
   stock_minimo INT NOT NULL DEFAULT 5,
   categoria_id INT NOT NULL,
+  activo TINYINT(1) NOT NULL DEFAULT 1,
   creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (categoria_id) REFERENCES categorias(id)
 );
 
--- Caja
 CREATE TABLE cajas (
   id INT AUTO_INCREMENT PRIMARY KEY,
   usuario_id INT NOT NULL,
-  fecha_apertura DATETIME NOT NULL,
+  fecha_apertura DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   fecha_cierre DATETIME,
   monto_inicial DECIMAL(10,2) NOT NULL,
   monto_final DECIMAL(10,2),
@@ -50,7 +51,6 @@ CREATE TABLE cajas (
   FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
 );
 
--- Ventas
 CREATE TABLE ventas (
   id INT AUTO_INCREMENT PRIMARY KEY,
   usuario_id INT NOT NULL,
@@ -61,7 +61,6 @@ CREATE TABLE ventas (
   FOREIGN KEY (caja_id) REFERENCES cajas(id)
 );
 
--- Detalle de ventas
 CREATE TABLE detalle_ventas (
   id INT AUTO_INCREMENT PRIMARY KEY,
   venta_id INT NOT NULL,
@@ -73,12 +72,10 @@ CREATE TABLE detalle_ventas (
   FOREIGN KEY (producto_id) REFERENCES productos(id)
 );
 
-select* from usuarios
-ALTER TABLE usuarios
-  ADD COLUMN activo TINYINT(1) NOT NULL DEFAULT 1
-  AFTER rol_id;
-  
-ALTER TABLE productos
-ADD COLUMN activo TINYINT(1) DEFAULT 1;
-  
-  
+INSERT INTO categorias (nombre) VALUES
+('Bebidas'),
+('Snacks'),
+('Lácteos'),
+('Abarrotes'),
+('Limpieza'),
+('Cuidado personal');
