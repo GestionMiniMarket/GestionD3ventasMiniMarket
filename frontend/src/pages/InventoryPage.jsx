@@ -1,15 +1,27 @@
 import { useEffect, useMemo, useState } from "react";
-import { getProductos } from "../services/productosService";
+import { createProducto, getProductos } from "../services/productosService";
+import { getCategorias } from "../services/categoriasService";
 
 export default function Productos() {
   const [productos, setProductos] = useState([]);
   const [busqueda, setBusqueda] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [categorias, setCategorias] = useState([]);
+  const [modalAbierto, setModalAbierto] = useState(false);
+  const [guardando, setGuardando] = useState(false);
+  const [formProducto, setFormProducto] = useState({
+    nombre: "",
+    precio: "",
+    stock: "",
+    stock_minimo: "",
+    categoria_id: "",
+  });
 
   const cargarProductos = async () => {
     setLoading(true);
     setError("");
+
 
     try {
       const res = await getProductos();
@@ -21,9 +33,20 @@ export default function Productos() {
       setLoading(false);
     }
   };
+  const cargarCategorias = async () => {
+    try {
+      const res = await getCategorias();
+      setCategorias(res.data);
+    } catch (err) {
+      console.error(err);
+      setError("No se pudieron cargar las categorías.");
+    }
+  };
+
 
   useEffect(() => {
     cargarProductos();
+    cargarCategorias();
   }, []);
 
   const productosFiltrados = useMemo(() => {
@@ -40,6 +63,56 @@ export default function Productos() {
   const esStockBajo = (producto) => {
     return Number(producto.stock) <= Number(producto.stock_minimo);
   };
+const abrirModalNuevo = () => {
+  setFormProducto({
+    nombre: "",
+    precio: "",
+    stock: "",
+    stock_minimo: "",
+    categoria_id: "",
+  });
+  setModalAbierto(true);
+};
+
+const cerrarModal = () => {
+  setModalAbierto(false);
+};
+
+const manejarCambio = (e) => {
+  const { name, value } = e.target;
+  setFormProducto((prev) => ({
+    ...prev,
+    [name]: value,
+  }));
+};
+
+const guardarProducto = async (e) => {
+  e.preventDefault();
+  setGuardando(true);
+  setError("");
+
+  try {
+    await createProducto({
+      nombre: formProducto.nombre,
+      precio: Number(formProducto.precio),
+      stock: Number(formProducto.stock || 0),
+      stock_minimo: Number(formProducto.stock_minimo || 5),
+      categoria_id: Number(formProducto.categoria_id),
+    });
+
+    cerrarModal();
+    await cargarProductos();
+  } catch (err) {
+    console.error(err);
+    const mensaje =
+      err.response?.data?.mensaje ||
+      err.response?.data?.message ||
+      "No se pudo registrar el producto.";
+    setError(mensaje);
+  } finally {
+    setGuardando(false);
+  }
+};
 
   return (
     <div>
@@ -56,7 +129,7 @@ export default function Productos() {
           </p>
         </div>
 
-        <button className="btn-primary" type="button">
+        <button className="btn-primary" type="button" onClick={abrirModalNuevo}>
           <svg
             className="w-4 h-4"
             fill="none"
@@ -151,6 +224,122 @@ export default function Productos() {
           </div>
         )}
       </div>
+    {modalAbierto && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+    <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6">
+      <div className="flex items-start justify-between mb-5">
+        <div>
+          <h3 className="text-xl font-extrabold" style={{ fontFamily: "'Nunito', sans-serif" }}>
+            Nuevo producto
+          </h3>
+          <p className="text-sm mt-1" style={{ color: "var(--text-mid)" }}>
+            Registra un producto en el inventario.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={cerrarModal}
+          className="text-gray-400 hover:text-gray-700 text-2xl leading-none"
+        >
+          ×
+        </button>
+      </div>
+
+      <form onSubmit={guardarProducto} className="space-y-4">
+        <div>
+          <label className="block text-sm font-bold mb-1">Nombre</label>
+          <input
+            type="text"
+            name="nombre"
+            className="input-field"
+            value={formProducto.nombre}
+            onChange={manejarCambio}
+            placeholder="Ejemplo: Arroz Costeño 1kg"
+            required
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-bold mb-1">Precio</label>
+            <input
+              type="number"
+              name="precio"
+              className="input-field"
+              value={formProducto.precio}
+              onChange={manejarCambio}
+              placeholder="0.00"
+              min="0"
+              step="0.01"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold mb-1">Categoría</label>
+            <select
+              name="categoria_id"
+              className="input-field"
+              value={formProducto.categoria_id}
+              onChange={manejarCambio}
+              required
+            >
+              <option value="">Seleccionar categoría</option>
+              {categorias.map((categoria) => (
+                <option key={categoria.id} value={categoria.id}>
+                  {categoria.nombre}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-bold mb-1">Stock</label>
+            <input
+              type="number"
+              name="stock"
+              className="input-field"
+              value={formProducto.stock}
+              onChange={manejarCambio}
+              placeholder="0"
+              min="0"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold mb-1">Stock mínimo</label>
+            <input
+              type="number"
+              name="stock_minimo"
+              className="input-field"
+              value={formProducto.stock_minimo}
+              onChange={manejarCambio}
+              placeholder="5"
+              min="0"
+            />
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-3 pt-4">
+          <button
+            type="button"
+            onClick={cerrarModal}
+            className="px-4 py-2 rounded-xl font-bold text-sm border border-gray-200 hover:bg-gray-50"
+          >
+            Cancelar
+          </button>
+
+          <button type="submit" className="btn-primary" disabled={guardando}>
+            {guardando ? "Guardando..." : "Guardar producto"}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+)}
     </div>
   );
 }
