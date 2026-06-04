@@ -9,6 +9,7 @@ import Cajero from "./pages/CashierPage";
 import Supervisor from "./pages/SupervisorPage";
 import RoleRoute from "./router/RoleRoute";
 import Usuarios from "./pages/UsersPage";
+import StockPage from "./pages/StockPage";
 function App() {
   return (
     <BrowserRouter>
@@ -39,6 +40,18 @@ function App() {
             </PrivateRoute>
           } 
         />
+
+        <Route
+          path="/inventario"
+          element={
+            <PrivateRoute>
+              <Layout>
+                <StockPage />
+              </Layout>
+            </PrivateRoute>
+          }
+        />
+
       <Route 
         path="/admin" 
         element={

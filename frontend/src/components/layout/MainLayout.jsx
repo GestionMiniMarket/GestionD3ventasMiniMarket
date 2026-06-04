@@ -3,6 +3,7 @@ import {
   FaBasketShopping,
   FaChartPie,
   FaBoxesStacked,
+  FaWarehouse,
   FaUsersGear,
   FaUsers,
   FaChartLine,
@@ -61,6 +62,7 @@ export default function Layout({ children }) {
 
           <NavItem to="/dashboard" icon={FaChartPie} label="Dashboard" />
           <NavItem to="/productos" icon={FaBoxesStacked} label="Productos" />
+          <NavItem to="/inventario" icon={FaWarehouse} label="Inventario" />
 
           {rol === "Administrador" && (
             <>

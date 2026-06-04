@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
-import { createProducto, getProductos } from "../services/productosService";
+import {
+  createProducto,
+  desactivarProducto,
+  getProductos,
+  updateProducto,
+} from "../services/productosService";
 import { getCategorias } from "../services/categoriasService";
+import { FaPen, FaPlus, FaTrash } from "react-icons/fa6";
 
 export default function Productos() {
   const [productos, setProductos] = useState([]);
@@ -9,19 +15,20 @@ export default function Productos() {
   const [error, setError] = useState("");
   const [categorias, setCategorias] = useState([]);
   const [modalAbierto, setModalAbierto] = useState(false);
+  const [modoFormulario, setModoFormulario] = useState("crear");
+  const [productoSeleccionado, setProductoSeleccionado] = useState(null);
   const [guardando, setGuardando] = useState(false);
+
   const [formProducto, setFormProducto] = useState({
     nombre: "",
+    descripcion: "",
     precio: "",
-    stock: "",
-    stock_minimo: "",
     categoria_id: "",
   });
 
   const cargarProductos = async () => {
     setLoading(true);
     setError("");
-
 
     try {
       const res = await getProductos();
@@ -33,6 +40,7 @@ export default function Productos() {
       setLoading(false);
     }
   };
+
   const cargarCategorias = async () => {
     try {
       const res = await getCategorias();
@@ -42,7 +50,6 @@ export default function Productos() {
       setError("No se pudieron cargar las categorías.");
     }
   };
-
 
   useEffect(() => {
     cargarProductos();
@@ -55,27 +62,40 @@ export default function Productos() {
     return productos.filter((producto) => {
       return (
         producto.nombre?.toLowerCase().includes(texto) ||
-        producto.categoria?.toLowerCase().includes(texto)
+        producto.categoria?.toLowerCase().includes(texto) ||
+        producto.descripcion?.toLowerCase().includes(texto)
       );
     });
   }, [productos, busqueda]);
 
-  const esStockBajo = (producto) => {
-    return Number(producto.stock) <= Number(producto.stock_minimo);
-  };
   const abrirModalNuevo = () => {
+    setModoFormulario("crear");
+    setProductoSeleccionado(null);
     setFormProducto({
       nombre: "",
+      descripcion: "",
       precio: "",
-      stock: "",
-      stock_minimo: "",
       categoria_id: "",
+    });
+    setModalAbierto(true);
+  };
+
+  const abrirModalEditar = (producto) => {
+    setModoFormulario("editar");
+    setProductoSeleccionado(producto);
+    setFormProducto({
+      nombre: producto.nombre || "",
+      descripcion: producto.descripcion || "",
+      precio: producto.precio || "",
+      categoria_id: producto.categoria_id || "",
     });
     setModalAbierto(true);
   };
 
   const cerrarModal = () => {
     setModalAbierto(false);
+    setProductoSeleccionado(null);
+    setModoFormulario("crear");
   };
 
   const manejarCambio = (e) => {
@@ -92,13 +112,18 @@ export default function Productos() {
     setError("");
 
     try {
-      await createProducto({
+      const payload = {
         nombre: formProducto.nombre,
+        descripcion: formProducto.descripcion,
         precio: Number(formProducto.precio),
-        stock: Number(formProducto.stock || 0),
-        stock_minimo: Number(formProducto.stock_minimo || 5),
         categoria_id: Number(formProducto.categoria_id),
-      });
+      };
+
+      if (modoFormulario === "editar") {
+        await updateProducto(productoSeleccionado.id, payload);
+      } else {
+        await createProducto(payload);
+      }
 
       cerrarModal();
       await cargarProductos();
@@ -107,10 +132,26 @@ export default function Productos() {
       const mensaje =
         err.response?.data?.mensaje ||
         err.response?.data?.message ||
-        "No se pudo registrar el producto.";
+        "No se pudo guardar el producto.";
       setError(mensaje);
     } finally {
       setGuardando(false);
+    }
+  };
+
+  const desactivar = async (producto) => {
+    const confirmar = window.confirm(
+      `¿Deseas desactivar el producto "${producto.nombre}"?`
+    );
+
+    if (!confirmar) return;
+
+    try {
+      await desactivarProducto(producto.id);
+      await cargarProductos();
+    } catch (err) {
+      console.error(err);
+      setError("No se pudo desactivar el producto.");
     }
   };
 
@@ -118,27 +159,24 @@ export default function Productos() {
     <div>
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-8">
         <div>
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-green-50 text-green-700 mb-3">
+            Catálogo comercial
+          </span>
+
           <h2
             className="text-2xl font-extrabold"
             style={{ fontFamily: "'Nunito', sans-serif" }}
           >
             Productos
           </h2>
+
           <p className="text-sm mt-1" style={{ color: "var(--text-mid)" }}>
-            Gestión de inventario del minimarket
+            Administra la información comercial de los productos del minimarket.
           </p>
         </div>
 
         <button className="btn-primary" type="button" onClick={abrirModalNuevo}>
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            viewBox="0 0 24 24"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-          </svg>
+          <FaPlus className="text-sm" />
           Nuevo producto
         </button>
       </div>
@@ -150,18 +188,18 @@ export default function Productos() {
               className="text-xl font-extrabold mb-1"
               style={{ fontFamily: "'Nunito', sans-serif" }}
             >
-              Inventario de productos
+              Lista de productos
             </h3>
             <p className="text-sm" style={{ color: "var(--text-mid)" }}>
-              Busca productos por nombre o categoría.
+              Busca por nombre, descripción o categoría.
             </p>
           </div>
 
-          <div className="w-full md:w-80">
+          <div className="w-full md:w-96">
             <input
               type="text"
               className="input-field"
-              placeholder="Buscar producto o categoría..."
+              placeholder="Buscar producto..."
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
             />
@@ -190,32 +228,59 @@ export default function Productos() {
               <thead>
                 <tr className="text-left border-b border-gray-100">
                   <th className="px-6 py-4 font-bold">Producto</th>
+                  <th className="px-6 py-4 font-bold">Descripción</th>
                   <th className="px-6 py-4 font-bold">Categoría</th>
                   <th className="px-6 py-4 font-bold">Precio</th>
-                  <th className="px-6 py-4 font-bold">Stock</th>
-                  <th className="px-6 py-4 font-bold">Stock mínimo</th>
-                  <th className="px-6 py-4 font-bold">Estado</th>
+                  <th className="px-6 py-4 font-bold">Acciones</th>
                 </tr>
               </thead>
 
               <tbody>
                 {productosFiltrados.map((producto) => (
-                  <tr key={producto.id} className="border-b border-gray-100 last:border-b-0">
-                    <td className="px-6 py-4 font-semibold">{producto.nombre}</td>
-                    <td className="px-6 py-4">{producto.categoria}</td>
-                    <td className="px-6 py-4">S/ {Number(producto.precio).toFixed(2)}</td>
-                    <td className="px-6 py-4">{producto.stock}</td>
-                    <td className="px-6 py-4">{producto.stock_minimo}</td>
+                  <tr
+                    key={producto.id}
+                    className="border-b border-gray-100 last:border-b-0 hover:bg-gray-50"
+                  >
+                    <td className="px-6 py-4 font-semibold">
+                      {producto.nombre}
+                    </td>
+
+                    <td className="px-6 py-4 max-w-xs">
+                      <span style={{ color: "var(--text-mid)" }}>
+                        {producto.descripcion || "Sin descripción"}
+                      </span>
+                    </td>
+
                     <td className="px-6 py-4">
-                      {esStockBajo(producto) ? (
-                        <span className="px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700">
-                          Stock bajo
-                        </span>
-                      ) : (
-                        <span className="px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700">
-                          Disponible
-                        </span>
-                      )}
+                      <span className="px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-700">
+                        {producto.categoria}
+                      </span>
+                    </td>
+
+                    <td className="px-6 py-4 font-semibold">
+                      S/ {Number(producto.precio).toFixed(2)}
+                    </td>
+
+                    <td className="px-6 py-4">
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => abrirModalEditar(producto)}
+                          className="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold bg-blue-50 text-blue-700 hover:bg-blue-100"
+                        >
+                          <FaPen className="text-xs" />
+                          Editar
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => desactivar(producto)}
+                          className="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold bg-red-50 text-red-700 hover:bg-red-100"
+                        >
+                          <FaTrash className="text-xs" />
+                          Desactivar
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -224,122 +289,121 @@ export default function Productos() {
           </div>
         )}
       </div>
-    {modalAbierto && (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6">
-        <div className="flex items-start justify-between mb-5">
-          <div>
-            <h3 className="text-xl font-extrabold" style={{ fontFamily: "'Nunito', sans-serif" }}>
-              Nuevo producto
-            </h3>
-            <p className="text-sm mt-1" style={{ color: "var(--text-mid)" }}>
-              Registra un producto en el inventario.
-            </p>
-          </div>
 
-          <button
-            type="button"
-            onClick={cerrarModal}
-            className="text-gray-400 hover:text-gray-700 text-2xl leading-none"
-          >
-            ×
-          </button>
-        </div>
+      {modalAbierto && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6">
+            <div className="flex items-start justify-between mb-5">
+              <div>
+                <h3
+                  className="text-xl font-extrabold"
+                  style={{ fontFamily: "'Nunito', sans-serif" }}
+                >
+                  {modoFormulario === "editar"
+                    ? "Editar producto"
+                    : "Nuevo producto"}
+                </h3>
 
-        <form onSubmit={guardarProducto} className="space-y-4">
-          <div>
-            <label className="block text-sm font-bold mb-1">Nombre</label>
-            <input
-              type="text"
-              name="nombre"
-              className="input-field"
-              value={formProducto.nombre}
-              onChange={manejarCambio}
-              placeholder="Ejemplo: Arroz Costeño 1kg"
-              required
-            />
-          </div>
+                <p className="text-sm mt-1" style={{ color: "var(--text-mid)" }}>
+                  {modoFormulario === "editar"
+                    ? "Actualiza la información comercial del producto."
+                    : "Registra un producto. El stock iniciará automáticamente en 0."}
+                </p>
+              </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-bold mb-1">Precio</label>
-              <input
-                type="number"
-                name="precio"
-                className="input-field"
-                value={formProducto.precio}
-                onChange={manejarCambio}
-                placeholder="0.00"
-                min="0"
-                step="0.01"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-bold mb-1">Categoría</label>
-              <select
-                name="categoria_id"
-                className="input-field"
-                value={formProducto.categoria_id}
-                onChange={manejarCambio}
-                required
+              <button
+                type="button"
+                onClick={cerrarModal}
+                className="text-gray-400 hover:text-gray-700 text-2xl leading-none"
               >
-                <option value="">Seleccionar categoría</option>
-                {categorias.map((categoria) => (
-                  <option key={categoria.id} value={categoria.id}>
-                    {categoria.nombre}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-bold mb-1">Stock</label>
-              <input
-                type="number"
-                name="stock"
-                className="input-field"
-                value={formProducto.stock}
-                onChange={manejarCambio}
-                placeholder="0"
-                min="0"
-              />
+                ×
+              </button>
             </div>
 
-            <div>
-              <label className="block text-sm font-bold mb-1">Stock mínimo</label>
-              <input
-                type="number"
-                name="stock_minimo"
-                className="input-field"
-                value={formProducto.stock_minimo}
-                onChange={manejarCambio}
-                placeholder="5"
-                min="0"
-              />
-            </div>
-          </div>
+            <form onSubmit={guardarProducto} className="space-y-4">
+              <div>
+                <label className="block text-sm font-bold mb-1">Nombre</label>
+                <input
+                  type="text"
+                  name="nombre"
+                  className="input-field"
+                  value={formProducto.nombre}
+                  onChange={manejarCambio}
+                  placeholder="Ejemplo: Arroz Costeño 1kg"
+                  required
+                />
+              </div>
 
-          <div className="flex justify-end gap-3 pt-4">
-            <button
-              type="button"
-              onClick={cerrarModal}
-              className="px-4 py-2 rounded-xl font-bold text-sm border border-gray-200 hover:bg-gray-50"
-            >
-              Cancelar
-            </button>
+              <div>
+                <label className="block text-sm font-bold mb-1">
+                  Descripción
+                </label>
+                <textarea
+                  name="descripcion"
+                  className="input-field"
+                  rows="3"
+                  value={formProducto.descripcion}
+                  onChange={manejarCambio}
+                  placeholder="Describe brevemente el producto"
+                />
+              </div>
 
-            <button type="submit" className="btn-primary" disabled={guardando}>
-              {guardando ? "Guardando..." : "Guardar producto"}
-            </button>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-bold mb-1">Precio</label>
+                  <input
+                    type="number"
+                    name="precio"
+                    className="input-field"
+                    value={formProducto.precio}
+                    onChange={manejarCambio}
+                    placeholder="0.00"
+                    min="0"
+                    step="0.01"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold mb-1">Categoría</label>
+                  <select
+                    name="categoria_id"
+                    className="input-field"
+                    value={formProducto.categoria_id}
+                    onChange={manejarCambio}
+                    required
+                  >
+                    <option value="">Seleccionar categoría</option>
+                    {categorias.map((categoria) => (
+                      <option key={categoria.id} value={categoria.id}>
+                        {categoria.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={cerrarModal}
+                  className="px-4 py-2 rounded-xl font-bold text-sm border border-gray-200 hover:bg-gray-50"
+                >
+                  Cancelar
+                </button>
+
+                <button type="submit" className="btn-primary" disabled={guardando}>
+                  {guardando
+                    ? "Guardando..."
+                    : modoFormulario === "editar"
+                    ? "Guardar cambios"
+                    : "Guardar producto"}
+                </button>
+              </div>
+            </form>
           </div>
-        </form>
-      </div>
-    </div>
-  )}
+        </div>
+      )}
     </div>
   );
 }
