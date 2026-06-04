@@ -4,9 +4,10 @@ const db = require('../config/db');
 const listarProductos = (req, res) => {
   const sql = `
     SELECT p.id, p.nombre, p.precio, p.stock, p.stock_minimo,
-           c.nombre AS categoria
+           p.categoria_id, c.nombre AS categoria
     FROM productos p
     JOIN categorias c ON p.categoria_id = c.id
+    WHERE p.activo = 1
   `;
   db.query(sql, (err, results) => {
     if (err) return res.status(500).json({ mensaje: 'Error en el servidor' });
@@ -48,12 +49,21 @@ const editarProducto = (req, res) => {
 // Eliminar producto
 const eliminarProducto = (req, res) => {
   const { id } = req.params;
-  const sql = 'DELETE FROM productos WHERE id = ?';
-  db.query(sql, [id], (err, result) => {
+  db.query('UPDATE productos SET activo = 0 WHERE id = ?', [id], (err, result) => {
     if (err) return res.status(500).json({ mensaje: 'Error en el servidor' });
     if (result.affectedRows === 0)
       return res.status(404).json({ mensaje: 'Producto no encontrado' });
-    res.json({ mensaje: 'Producto eliminado correctamente' });
+    res.json({ mensaje: 'Producto desactivado correctamente' });
+  });
+};
+
+const restaurarProducto = (req, res) => {
+  const { id } = req.params;
+  db.query('UPDATE productos SET activo = 1 WHERE id = ?', [id], (err, result) => {
+    if (err) return res.status(500).json({ mensaje: 'Error en el servidor' });
+    if (result.affectedRows === 0)
+      return res.status(404).json({ mensaje: 'Producto no encontrado' });
+    res.json({ mensaje: 'Producto restaurado correctamente' });
   });
 };
 
@@ -66,4 +76,4 @@ const stockBajo = (req, res) => {
   });
 };
 
-module.exports = { listarProductos, crearProducto, editarProducto, eliminarProducto, stockBajo };
+module.exports = { listarProductos, crearProducto, editarProducto, eliminarProducto, stockBajo, restaurarProducto  };

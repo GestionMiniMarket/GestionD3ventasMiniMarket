@@ -32,12 +32,18 @@ const login = (req, res) => {
   if (!email || !password)
     return res.status(400).json({ mensaje: 'Correo y contraseña son requeridos' });
 
-  const sql = 'SELECT u.*, r.nombre AS rol FROM usuarios u JOIN roles r ON u.rol_id = r.id WHERE u.email = ?';
+  const sql = `
+  SELECT u.*, r.nombre AS rol 
+  FROM usuarios u 
+  JOIN roles r ON u.rol_id = r.id 
+  WHERE u.email = ? AND u.activo = 1
+`;
+
 
   db.query(sql, [email], (err, results) => {
     if (err) return res.status(500).json({ mensaje: 'Error en el servidor' });
     if (results.length === 0)
-      return res.status(401).json({ mensaje: 'Credenciales incorrectas' });
+      return res.status(401).json({ mensaje: 'Usuario inactivo. Contacte al administrador.' });
 
     const usuario = results[0];
     const passwordValida = bcrypt.compareSync(password, usuario.password);
