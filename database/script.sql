@@ -1,4 +1,4 @@
-CREATE DATABASE usuariosminimarket_db;
+CREATE DATABASE minimarket_db;
 USE minimarket_db;
 
 -- Roles
@@ -73,8 +73,12 @@ CREATE TABLE detalle_ventas (
   FOREIGN KEY (producto_id) REFERENCES productos(id)
 );
 
-select* from usuarios;
-
+select* from usuarios
 ALTER TABLE usuarios
   ADD COLUMN activo TINYINT(1) NOT NULL DEFAULT 1
   AFTER rol_id;
+  
+ALTER TABLE productos
+ADD COLUMN activo TINYINT(1) DEFAULT 1;
+  
+  
