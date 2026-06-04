@@ -20,3 +20,6 @@ app.use('/api/productos', productosRoutes);
 
 const categoriasRoutes = require('./routes/categoriasRoutes');
 app.use('/api/categorias', categoriasRoutes);
+
+const inventarioRoutes = require('./routes/inventarioRoutes');
+app.use('/api/inventario', inventarioRoutes);

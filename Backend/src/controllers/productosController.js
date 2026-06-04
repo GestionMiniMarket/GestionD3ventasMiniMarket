@@ -17,13 +17,13 @@ const listarProductos = (req, res) => {
 
 // Crear producto
 const crearProducto = (req, res) => {
-  const { nombre, precio, stock, stock_minimo, categoria_id } = req.body;
+  const { nombre, precio, categoria_id, descripcion } = req.body;
 
   if (!nombre || !precio || !categoria_id)
     return res.status(400).json({ mensaje: 'Nombre, precio y categoría son requeridos' });
 
-  const sql = 'INSERT INTO productos (nombre, precio, stock, stock_minimo, categoria_id) VALUES (?, ?, ?, ?, ?)';
-  db.query(sql, [nombre, precio, stock || 0, stock_minimo || 5, categoria_id], (err, result) => {
+  const sql = 'INSERT INTO productos (nombre, precio, stock, stock_minimo, categoria_id, descripcion) VALUES (?, ?, 0, 5, ?, ?)';
+  db.query(sql, [nombre, precio, categoria_id, descripcion || null], (err, result) => {
     if (err) return res.status(500).json({ mensaje: 'Error en el servidor' });
     res.status(201).json({ mensaje: 'Producto creado correctamente', id: result.insertId });
   });
