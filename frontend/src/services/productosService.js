@@ -20,10 +20,10 @@ export const updateProducto = (id, data) => {
   return axios.put(`${API_URL}/${id}`, data, getAuthHeader());
 };
 
-export const deleteProducto = (id) => {
+export const desactivarProducto = (id) => {
   return axios.delete(`${API_URL}/${id}`, getAuthHeader());
 };
 
-export const getStockBajo = () => {
-  return axios.get(`${API_URL}/stock-bajo`, getAuthHeader());
+export const restaurarProducto = (id) => {
+  return axios.put(`${API_URL}/${id}/restaurar`, {}, getAuthHeader());
 };
