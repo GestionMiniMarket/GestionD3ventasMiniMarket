@@ -3,15 +3,15 @@
 
 @layer base {
   :root {
-    --green-brand:   #1a6b3c;
-    --green-mid:     #22863e;
-    --green-light:   #2da84f;
-    --green-pale:    #e8f5ed;
-    --gold-accent:   #f5a623;
-    --gold-light:    #fef6e4;
-    --text-dark:     #1a1a2e;
-    --text-mid:      #4a5568;
-    --surface:       #f7f9f7;
+    --green-brand:   #166534;
+    --green-mid:     #15803d;
+    --green-light:   #22c55e;
+    --green-pale:    #ecfdf3;
+    --gold-accent:   #f59e0b;
+    --gold-light:    #fffbeb;
+    --text-dark:     #101828;
+    --text-mid:      #667085;
+    --surface:       #f4f6f8;
   }
 
   body {
@@ -33,7 +33,7 @@
   }
   .btn-primary:hover {
     background-color: var(--green-mid);
-    box-shadow: 0 4px 14px rgba(26,107,60,0.35);
+    box-shadow: 0 8px 20px rgba(16, 24, 40, 0.16);
   }
 
   .btn-secondary {

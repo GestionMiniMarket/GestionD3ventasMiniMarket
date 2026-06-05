@@ -84,17 +84,13 @@ const updateUsuario = async (req, res) => {
 
 // DELETE /api/usuarios/:id
 const deleteUsuario = async (req, res) => {
-  try {
-    const [result] = await dbPromise.query(
-      "UPDATE usuarios SET activo = 0 WHERE id = ? AND activo = 1",
-      [req.params.id]
-    );
+  const { id } = req.params;
+  db.query('UPDATE usuarios SET activo = 0 WHERE id = ?', [id], (err, result) => {
+    if (err) return res.status(500).json({ mensaje: 'Error en el servidor' });
     if (result.affectedRows === 0)
-      return res.status(404).json({ message: "Usuario no encontrado" });
-    res.json({ message: "Usuario desactivado correctamente" });
-  } catch (error) {
-    res.status(500).json({ message: "Error al desactivar usuario" });
-  }
+      return res.status(404).json({ mensaje: 'Usuario no encontrado' });
+    res.json({ mensaje: 'Usuario desactivado correctamente' });
+  });
 };
 
 module.exports = { getUsuarios, getUsuarioById, createUsuario, updateUsuario, deleteUsuario };

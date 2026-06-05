@@ -14,3 +14,12 @@ app.use('/api/usuarios', usuariosRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Servidor corriendo en puerto ${PORT}`));
+
+const productosRoutes = require('./routes/productosRoutes');
+app.use('/api/productos', productosRoutes);
+
+const categoriasRoutes = require('./routes/categoriasRoutes');
+app.use('/api/categorias', categoriasRoutes);
+
+const inventarioRoutes = require('./routes/inventarioRoutes');
+app.use('/api/inventario', inventarioRoutes);
