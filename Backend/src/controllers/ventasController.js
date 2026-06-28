@@ -1,17 +1,18 @@
 const db = require('../config/db');
 
 const registrarVenta = (req, res) => {
-  const { caja_id, productos } = req.body;
+  const { caja_id, productos, metodo_pago } = req.body;
   const usuario_id = req.usuario.id;
-
+  if (!metodo_pago || !['efectivo', 'tarjeta'].includes(metodo_pago))
+    return res.status(400).json({ mensaje: 'Método de pago inválido. Use efectivo o tarjeta' });
   if (!caja_id || !productos || productos.length === 0)
     return res.status(400).json({ mensaje: 'Caja y productos son requeridos' });
 
   let total = 0;
   productos.forEach(p => { total += p.precio_unitario * p.cantidad; });
 
-  const sqlVenta = 'INSERT INTO ventas (usuario_id, caja_id, total) VALUES (?, ?, ?)';
-  db.query(sqlVenta, [usuario_id, caja_id, total], (err, result) => {
+  const sqlVenta = 'INSERT INTO ventas (usuario_id, caja_id, total, metodo_pago) VALUES (?, ?, ?, ?)';
+  db.query(sqlVenta, [usuario_id, caja_id, total, metodo_pago], (err, result) => {
     if (err) return res.status(500).json({ mensaje: 'Error al registrar venta' });
 
     const venta_id = result.insertId;
