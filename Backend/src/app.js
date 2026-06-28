@@ -28,3 +28,6 @@ const ventasRoutes = require('./routes/ventasRoutes');
 
 app.use('/api/cajas', cajasRoutes);
 app.use('/api/ventas', ventasRoutes);
+
+const reportesRoutes = require('./routes/reportesRoutes');
+app.use('/api/reportes', reportesRoutes);
