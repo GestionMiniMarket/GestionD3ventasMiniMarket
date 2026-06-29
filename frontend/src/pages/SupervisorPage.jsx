@@ -54,8 +54,14 @@ export default function Supervisor() {
     setError("");
     setMensaje("");
 
+    if (!window.confirm("¿Desea confirmar definitivamente este cierre?")) {
+      return;
+    }
+
+
     try {
       setConfirmando(id);
+
 
       await confirmarCierre(id, observaciones[id] || "");
 

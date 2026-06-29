@@ -12,6 +12,7 @@ export default function CajaPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [resumen, setResumen] = useState(null);
+  const [cajaAbierta, setCajaAbierta] = useState(false);
 
   const [motivo, setMotivo] = useState("");
   const [montoEgreso, setMontoEgreso] = useState("");
@@ -24,8 +25,10 @@ export default function CajaPage() {
     try {
       const res = await getResumenCaja();
       setResumen(res.data);
+      setCajaAbierta(true);
     } catch {
       setResumen(null);
+      setCajaAbierta(false);
     }
   };
 
@@ -44,6 +47,7 @@ export default function CajaPage() {
 
     try {
       setLoading(true);
+    
       const res = await abrirCaja(Number(montoInicial));
 
       setMensaje(res.data.mensaje);
@@ -56,7 +60,7 @@ export default function CajaPage() {
       setLoading(false);
     }
   };
-
+  
   const handleRegistrarEgreso = async () => {
     setMensaje("");
     setError("");
@@ -64,6 +68,10 @@ export default function CajaPage() {
     if (!motivo || !montoEgreso || Number(montoEgreso) <= 0) {
       setError("Complete correctamente los datos del egreso.");
       return;
+    }
+
+    if (!window.confirm("¿Desea registrar este egreso?")) {
+        return;
     }
 
     try {
@@ -83,6 +91,8 @@ export default function CajaPage() {
     }
   };
 
+
+
   const handleSolicitarCierre = async () => {
     setMensaje("");
     setError("");
@@ -90,6 +100,10 @@ export default function CajaPage() {
     if (!efectivoContado || Number(efectivoContado) < 0) {
       setError("Ingrese el efectivo contado.");
       return;
+    }
+
+    if (!window.confirm("¿Desea solicitar el cierre de caja?")) {
+        return;
     }
 
     try {
@@ -114,6 +128,17 @@ export default function CajaPage() {
         <p className="text-sm mt-1" style={{ color: "var(--text-mid)" }}>
           Apertura, control y cierre de caja.
         </p>
+        <div className="mt-4">
+            {cajaAbierta ? (
+                <span className="inline-flex items-center px-3 py-1 rounded-full bg-green-100 text-green-700 text-sm font-semibold">
+                    🟢 Caja abierta
+                </span>
+            ) : (
+                <span className="inline-flex items-center px-3 py-1 rounded-full bg-red-100 text-red-700 text-sm font-semibold">
+                    🔴 Sin caja abierta
+                </span>
+            )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
@@ -123,13 +148,24 @@ export default function CajaPage() {
           <input
             type="number"
             placeholder="Monto inicial"
-            className="input-field w-full mb-4"
+            className={`input-field w-full mb-4 ${
+                cajaAbierta ? "bg-gray-100 cursor-not-allowed" : ""
+            }`}
             value={montoInicial}
             onChange={(e) => setMontoInicial(e.target.value)}
+            disabled={cajaAbierta}
           />
 
-          <button onClick={handleAbrirCaja} disabled={loading} className="btn-primary w-full">
-            {loading ? "Abriendo..." : "Abrir caja"}
+          <button onClick={handleAbrirCaja} disabled={loading || cajaAbierta} className={`w-full ${
+                cajaAbierta
+                    ? "bg-gray-300 cursor-not-allowed text-gray-600"
+                    : "btn-primary"
+            }`}>
+            {loading
+            ? "Abriendo..."
+            : cajaAbierta
+            ? "Caja abierta"
+            : "Abrir caja"}
           </button>
 
           {mensaje && <div className="mt-4 text-green-600 text-sm font-semibold">{mensaje}</div>}
@@ -162,7 +198,12 @@ export default function CajaPage() {
 
           <button
             onClick={() => setMostrarEgreso(!mostrarEgreso)}
-            className="btn-primary w-full mb-3"
+            disabled={!cajaAbierta}
+            className={`w-full mb-3 ${
+                cajaAbierta
+                    ? "btn-primary"
+                    : "bg-gray-300 text-gray-600 cursor-not-allowed"
+            }`}
           >
             Registrar egreso
           </button>
@@ -195,10 +236,17 @@ export default function CajaPage() {
             placeholder="Efectivo contado"
             className="input-field w-full mb-3"
             value={efectivoContado}
+            disabled={!cajaAbierta}
             onChange={(e) => setEfectivoContado(e.target.value)}
           />
 
-          <button onClick={handleSolicitarCierre} className="btn-primary w-full">
+          <button onClick={handleSolicitarCierre} 
+          disabled={!cajaAbierta} 
+          className={`w-full ${
+                cajaAbierta
+                    ? "btn-primary"
+                    : "bg-gray-300 text-gray-600 cursor-not-allowed"
+            }`}>
             Solicitar cierre
           </button>
 

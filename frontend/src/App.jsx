@@ -54,38 +54,29 @@ function App() {
         <Route
           path="/cajero"
           element={
-            <RoleRoute rolPermitido="Cajero">
+            <RoleRoute rolesPermitidos={["Administrador", "Cajero"]}>
               <Layout>
                 <Cajero />
               </Layout>
             </RoleRoute>
-          }
-        />
-        <Route
-          path="/caja"
-          element={
-            <PrivateRoute>
-              <Layout>
-                <CajaPage />
-              </Layout>
-            </PrivateRoute>
           }
         />
 
         <Route
           path="/caja"
           element={
-            <RoleRoute rolPermitido="Cajero">
+            <RoleRoute rolesPermitidos={["Administrador", "Cajero"]}>
               <Layout>
-                <Cajero />
+                <CajaPage />
               </Layout>
             </RoleRoute>
           }
         />
+
         <Route
           path="/supervisor"
           element={
-            <RoleRoute rolPermitido="Supervisor">
+            <RoleRoute rolesPermitidos={["Administrador", "Supervisor"]}>
               <Layout>
                 <Supervisor />
               </Layout>
@@ -96,14 +87,13 @@ function App() {
         <Route
           path="/reportes"
           element={
-            <RoleRoute rolPermitido="Supervisor">
+            <RoleRoute rolesPermitidos={["Administrador", "Supervisor"]}>
               <Layout>
                 <ReportesPage />
               </Layout>
             </RoleRoute>
           }
         />
-
 
         <Route
           path="/usuarios"
