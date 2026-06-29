@@ -4,7 +4,6 @@ require('dotenv').config();
 
 const authRoutes = require('./routes/authRoutes');
 const usuariosRoutes = require('./routes/usuariosRoutes');
-
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -23,3 +22,12 @@ app.use('/api/categorias', categoriasRoutes);
 
 const inventarioRoutes = require('./routes/inventarioRoutes');
 app.use('/api/inventario', inventarioRoutes);
+
+const cajasRoutes = require('./routes/cajasRoutes');
+const ventasRoutes = require('./routes/ventasRoutes');
+
+app.use('/api/cajas', cajasRoutes);
+app.use('/api/ventas', ventasRoutes);
+
+const reportesRoutes = require('./routes/reportesRoutes');
+app.use('/api/reportes', reportesRoutes);
