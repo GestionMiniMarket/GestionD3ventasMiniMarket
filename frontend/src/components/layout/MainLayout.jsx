@@ -11,6 +11,7 @@ import {
   FaCircleCheck,
   FaStore,
   FaMoneyBillTrendUp,
+  FaClipboardCheck,
 } from "react-icons/fa6";
 
 const NavSection = ({ title, children }) => (
@@ -102,7 +103,17 @@ export default function Layout({ children }) {
 
           {puedeVerReportes && (
             <NavSection title="Reportes">
-              <NavItem to="/reportes" icon={FaChartLine} label="Reportes" />
+              <NavItem
+                to="/supervisor"
+                icon={FaClipboardCheck}
+                label="Gestión de cierres"
+              />
+
+              <NavItem
+                to="/reportes"
+                icon={FaChartLine}
+                label="Reportes"
+              />
             </NavSection>
           )}
         </nav>

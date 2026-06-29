@@ -10,6 +10,7 @@ import RoleRoute from "./router/RoleRoute";
 import Usuarios from "./pages/UsersPage";
 import StockPage from "./pages/StockPage";
 import CajaPage from "./pages/CajaPage";
+import ReportesPage from "./pages/ReportesPage";
 
 function App() {
   return (
@@ -81,13 +82,23 @@ function App() {
             </RoleRoute>
           }
         />
+        <Route
+          path="/supervisor"
+          element={
+            <RoleRoute rolPermitido="Supervisor">
+              <Layout>
+                <Supervisor />
+              </Layout>
+            </RoleRoute>
+          }
+        />
 
         <Route
           path="/reportes"
           element={
             <RoleRoute rolPermitido="Supervisor">
               <Layout>
-                <Supervisor />
+                <ReportesPage />
               </Layout>
             </RoleRoute>
           }
