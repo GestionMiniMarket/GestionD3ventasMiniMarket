@@ -3,97 +3,95 @@ import Login from "./pages/LoginPage";
 import Dashboard from "./pages/DashboardPage";
 import PrivateRoute from "./router/PrivateRoute";
 import Layout from "./components/layout/MainLayout";
-import Productos from "./pages/InventoryPage"; 
-import Admin from "./pages/AdminPage";
+import Productos from "./pages/InventoryPage";
 import Cajero from "./pages/CashierPage";
 import Supervisor from "./pages/SupervisorPage";
 import RoleRoute from "./router/RoleRoute";
 import Usuarios from "./pages/UsersPage";
 import StockPage from "./pages/StockPage";
+
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-
-        {/* PUBLICAS */}
         <Route path="/" element={<Login />} />
 
-        {/* PRIVADAS CON LAYOUT */}
-        <Route 
-          path="/dashboard" 
+        <Route
+          path="/dashboard"
           element={
             <PrivateRoute>
               <Layout>
                 <Dashboard />
               </Layout>
             </PrivateRoute>
-          } 
+          }
         />
 
-        <Route 
-          path="/productos" 
+        <Route
+          path="/productos"
           element={
-            <PrivateRoute>
+            <RoleRoute rolPermitido="Administrador">
               <Layout>
                 <Productos />
               </Layout>
-            </PrivateRoute>
-          } 
+            </RoleRoute>
+          }
         />
 
         <Route
           path="/inventario"
           element={
-            <PrivateRoute>
+            <RoleRoute rolPermitido="Administrador">
               <Layout>
                 <StockPage />
               </Layout>
-            </PrivateRoute>
+            </RoleRoute>
           }
         />
 
-      <Route 
-        path="/admin" 
-        element={
-          <RoleRoute rolPermitido="Administrador">
-            <Layout>
-              <Admin />
-            </Layout>
-          </RoleRoute>
-        } 
-      />
-      <Route 
-        path="/cajero" 
-        element={
-          <RoleRoute rolPermitido="Cajero">
-            <Layout>
-              <Cajero />
-            </Layout>
-          </RoleRoute>
-        } 
-      />
+        <Route
+          path="/cajero"
+          element={
+            <RoleRoute rolPermitido="Cajero">
+              <Layout>
+                <Cajero />
+              </Layout>
+            </RoleRoute>
+          }
+        />
 
-      <Route 
-        path="/supervisor" 
-        element={
-          <RoleRoute rolPermitido="Supervisor">
-            <Layout>
-              <Supervisor />
-            </Layout>
-          </RoleRoute>
-        } 
-      />
-      <Route
-        path="/usuarios"
-        element={
-          <RoleRoute rolPermitido="Administrador">
-            <Layout>
-              <Usuarios />
-            </Layout>
-          </RoleRoute>
-        }
-      />
+        <Route
+          path="/caja"
+          element={
+            <RoleRoute rolPermitido="Cajero">
+              <Layout>
+                <Cajero />
+              </Layout>
+            </RoleRoute>
+          }
+        />
 
+        <Route
+          path="/reportes"
+          element={
+            <RoleRoute rolPermitido="Supervisor">
+              <Layout>
+                <Supervisor />
+              </Layout>
+            </RoleRoute>
+          }
+        />
+
+        <Route
+          path="/usuarios"
+          element={
+            <RoleRoute rolPermitido="Administrador">
+              <Layout>
+                <Usuarios />
+              </Layout>
+            </RoleRoute>
+          }
+        />
       </Routes>
     </BrowserRouter>
   );
