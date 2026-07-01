@@ -26,6 +26,7 @@ export default function Cajero() {
   const [metodoPago, setMetodoPago] = useState("efectivo");
   const [cajaId, setCajaId] = useState(null);
   const [registrando, setRegistrando] = useState(false);
+  const [modalVentaAbierto, setModalVentaAbierto] = useState(false);
 
   const cargarProductos = async () => {
     setLoading(true);
@@ -140,7 +141,7 @@ export default function Cajero() {
     0
   );
 
-  const handleRegistrarVenta = async () => {
+  const handleRegistrarVenta = () => {
     setError("");
     setMensaje("");
 
@@ -163,7 +164,17 @@ export default function Cajero() {
       return;
     }
 
-    if (!window.confirm("¿Desea registrar esta venta?")) return;
+    setModalVentaAbierto(true);
+  };
+
+  const cerrarModalVenta = () => {
+    if (registrando) return;
+    setModalVentaAbierto(false);
+  };
+
+  const confirmarVenta = async () => {
+    setError("");
+    setMensaje("");
 
     try {
       setRegistrando(true);
@@ -182,6 +193,7 @@ export default function Cajero() {
 
       setMensaje(`${res.data.mensaje}. Total: ${formatearSoles(res.data.total)}`);
       setCarrito([]);
+      setModalVentaAbierto(false);
 
       await cargarProductos();
       await cargarCajaActiva();
@@ -452,6 +464,68 @@ export default function Cajero() {
           )}
         </div>
       </div>
+
+      {modalVentaAbierto && (
+        <div
+          className="fixed inset-0 flex items-center justify-center p-4 z-50"
+          style={{ background: "rgba(0,0,0,0.45)" }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) cerrarModalVenta();
+          }}
+        >
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
+            <div className="w-12 h-12 bg-blue-50 text-blue-700 rounded-xl flex items-center justify-center mb-4">
+              <FaBasketShopping className="w-5 h-5" />
+            </div>
+
+            <h3
+              className="text-lg font-extrabold mb-1"
+              style={{ fontFamily: "'Nunito', sans-serif" }}
+            >
+              ¿Confirmar venta?
+            </h3>
+
+            <p className="text-sm mb-4" style={{ color: "var(--text-mid)" }}>
+              ¿Estás seguro de que deseas registrar esta venta? Se descontará el
+              stock de los productos seleccionados.
+            </p>
+
+            <div className="rounded-xl bg-gray-50 border border-gray-100 p-4 text-sm mb-6 space-y-2">
+              <p>
+                <strong>Productos:</strong> {carrito.length}
+              </p>
+              <p>
+                <strong>Método de pago:</strong>{" "}
+                {metodoPago === "efectivo" ? "Efectivo" : "Tarjeta"}
+              </p>
+              <p className="text-lg font-extrabold">
+                Total: {formatearSoles(totalVenta)}
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                className="btn-secondary flex-1"
+                type="button"
+                onClick={cerrarModalVenta}
+                disabled={registrando}
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="button"
+                onClick={confirmarVenta}
+                disabled={registrando}
+                className="flex-1 inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm text-white bg-blue-600 hover:bg-blue-700 transition-all disabled:opacity-60"
+              >
+                {registrando ? "Registrando..." : "Sí, registrar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

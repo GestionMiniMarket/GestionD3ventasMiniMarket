@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   createProducto,
   desactivarProducto,
+  restaurarProducto,
   getProductos,
   updateProducto,
 } from "../services/productosService";
@@ -13,11 +14,14 @@ export default function Productos() {
   const [busqueda, setBusqueda] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [mensaje, setMensaje] = useState("");
   const [categorias, setCategorias] = useState([]);
   const [modalAbierto, setModalAbierto] = useState(false);
   const [modoFormulario, setModoFormulario] = useState("crear");
   const [productoSeleccionado, setProductoSeleccionado] = useState(null);
   const [guardando, setGuardando] = useState(false);
+  const [modalConfirmacion, setModalConfirmacion] = useState(null);
+  const [procesandoAccion, setProcesandoAccion] = useState(false);
 
   const [formProducto, setFormProducto] = useState({
     nombre: "",
@@ -139,19 +143,47 @@ export default function Productos() {
     }
   };
 
-  const desactivar = async (producto) => {
-    const confirmar = window.confirm(
-      `¿Deseas desactivar el producto "${producto.nombre}"?`
-    );
+  const abrirModalConfirmacion = (tipo, producto) => {
+    setError("");
+    setMensaje("");
+    setModalConfirmacion({ tipo, producto });
+  };
 
-    if (!confirmar) return;
+  const cerrarModalConfirmacion = () => {
+    if (procesandoAccion) return;
+    setModalConfirmacion(null);
+  };
+
+  const confirmarAccionProducto = async () => {
+    if (!modalConfirmacion) return;
+
+    const { tipo, producto } = modalConfirmacion;
 
     try {
-      await desactivarProducto(producto.id);
+      setProcesandoAccion(true);
+
+      if (tipo === "desactivar") {
+        await desactivarProducto(producto.id);
+        setMensaje("Producto desactivado correctamente.");
+      }
+
+      if (tipo === "reactivar") {
+        await restaurarProducto(producto.id);
+        setMensaje("Producto reactivado correctamente.");
+      }
+
+      setError("");
+      setModalConfirmacion(null);
       await cargarProductos();
     } catch (err) {
       console.error(err);
-      setError("No se pudo desactivar el producto.");
+      setError(
+        tipo === "desactivar"
+          ? "No se pudo desactivar el producto."
+          : "No se pudo reactivar el producto."
+      );
+    } finally {
+      setProcesandoAccion(false);
     }
   };
 
@@ -212,6 +244,11 @@ export default function Productos() {
           {error}
         </div>
       )}
+      {mensaje && (
+        <div className="mb-4 px-4 py-3 rounded-lg bg-green-50 border border-green-100 text-green-700 text-sm">
+          {mensaje}
+        </div>
+      )}
 
       <div className="card overflow-hidden">
         {loading ? (
@@ -239,7 +276,11 @@ export default function Productos() {
                 {productosFiltrados.map((producto) => (
                   <tr
                     key={producto.id}
-                    className="border-b border-gray-100 last:border-b-0 hover:bg-gray-50"
+                    className={`border-b border-gray-100 last:border-b-0 ${
+                      Number(producto.activo) === 0
+                        ? "bg-gray-100 opacity-60"
+                        : "hover:bg-gray-50"
+                    }`}
                   >
                     <td className="px-6 py-4 font-semibold">
                       {producto.nombre}
@@ -263,23 +304,35 @@ export default function Productos() {
 
                     <td className="px-6 py-4">
                       <div className="flex gap-2">
-                        <button
-                          type="button"
-                          onClick={() => abrirModalEditar(producto)}
-                          className="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold bg-blue-50 text-blue-700 hover:bg-blue-100"
-                        >
-                          <FaPen className="text-xs" />
-                          Editar
-                        </button>
+                        {Number(producto.activo) === 1 ? (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => abrirModalEditar(producto)}
+                              className="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold bg-blue-50 text-blue-700 hover:bg-blue-100"
+                            >
+                              <FaPen className="text-xs" />
+                              Editar
+                            </button>
 
-                        <button
-                          type="button"
-                          onClick={() => desactivar(producto)}
-                          className="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold bg-red-50 text-red-700 hover:bg-red-100"
-                        >
-                          <FaTrash className="text-xs" />
-                          Desactivar
-                        </button>
+                            <button
+                              type="button"
+                              onClick={() => abrirModalConfirmacion("desactivar", producto)}
+                              className="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold bg-red-50 text-red-700 hover:bg-red-100"
+                            >
+                              <FaTrash className="text-xs" />
+                              Desactivar
+                            </button>
+                          </>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => abrirModalConfirmacion("reactivar", producto)}
+                            className="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold bg-green-50 text-green-700 hover:bg-green-100"
+                          >
+                            Reactivar
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -289,6 +342,86 @@ export default function Productos() {
           </div>
         )}
       </div>
+
+
+      {modalConfirmacion && (
+        <div
+          className="fixed inset-0 flex items-center justify-center p-4 z-50"
+          style={{ background: "rgba(0,0,0,0.45)" }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) cerrarModalConfirmacion();
+          }}
+        >
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
+            <div
+              className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${
+                modalConfirmacion.tipo === "desactivar"
+                  ? "bg-red-50 text-red-500"
+                  : "bg-green-50 text-green-600"
+              }`}
+            >
+              {modalConfirmacion.tipo === "desactivar" ? (
+                <FaTrash className="w-5 h-5" />
+              ) : (
+                <FaPlus className="w-5 h-5" />
+              )}
+            </div>
+
+            <h3
+              className="text-lg font-extrabold mb-1"
+              style={{ fontFamily: "'Nunito', sans-serif" }}
+            >
+              {modalConfirmacion.tipo === "desactivar"
+                ? "¿Confirmar desactivación?"
+                : "¿Confirmar reactivación?"}
+            </h3>
+
+            <p className="text-sm mb-6" style={{ color: "var(--text-mid)" }}>
+              {modalConfirmacion.tipo === "desactivar" ? (
+                <>
+                  ¿Estás seguro de que deseas desactivar el producto{" "}
+                  <strong>{modalConfirmacion.producto?.nombre}</strong>? El producto
+                  seguirá visible en gris, pero no podrá venderse.
+                </>
+              ) : (
+                <>
+                  ¿Estás seguro de que deseas reactivar el producto{" "}
+                  <strong>{modalConfirmacion.producto?.nombre}</strong>? El producto
+                  volverá a estar disponible para la venta.
+                </>
+              )}
+            </p>
+
+            <div className="flex gap-3">
+              <button
+                className="btn-secondary flex-1"
+                type="button"
+                onClick={cerrarModalConfirmacion}
+                disabled={procesandoAccion}
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="button"
+                onClick={confirmarAccionProducto}
+                disabled={procesandoAccion}
+                className={`flex-1 inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm text-white transition-all disabled:opacity-60 ${
+                  modalConfirmacion.tipo === "desactivar"
+                    ? "bg-red-600 hover:bg-red-700"
+                    : "bg-green-600 hover:bg-green-700"
+                }`}
+              >
+                {procesandoAccion
+                  ? "Procesando..."
+                  : modalConfirmacion.tipo === "desactivar"
+                  ? "Sí, desactivar"
+                  : "Sí, reactivar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {modalAbierto && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">

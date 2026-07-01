@@ -21,6 +21,7 @@ export default function Supervisor() {
   const [confirmando, setConfirmando] = useState(null);
   const [mensaje, setMensaje] = useState("");
   const [error, setError] = useState("");
+  const [modalCierre, setModalCierre] = useState(null);
 
   const cargarCajas = async () => {
     setLoading(true);
@@ -50,18 +51,24 @@ export default function Supervisor() {
     return cajas.filter((caja) => caja.estado === "cerrada").slice(0, 5);
   }, [cajas]);
 
-  const handleConfirmarCierre = async (id) => {
+  const abrirModalCierre = (caja) => {
     setError("");
     setMensaje("");
+    setModalCierre(caja);
+  };
 
-    if (!window.confirm("¿Desea confirmar definitivamente este cierre?")) {
-      return;
-    }
+  const cerrarModalCierre = () => {
+    if (confirmando) return;
+    setModalCierre(null);
+  };
 
+  const confirmarCierreModal = async () => {
+    if (!modalCierre) return;
+
+    const id = modalCierre.id;
 
     try {
       setConfirmando(id);
-
 
       await confirmarCierre(id, observaciones[id] || "");
 
@@ -70,6 +77,7 @@ export default function Supervisor() {
         ...prev,
         [id]: "",
       }));
+      setModalCierre(null);
 
       await cargarCajas();
     } catch (err) {
@@ -252,7 +260,7 @@ export default function Supervisor() {
 
                   <button
                     type="button"
-                    onClick={() => handleConfirmarCierre(caja.id)}
+                    onClick={() => abrirModalCierre(caja)}
                     disabled={confirmando === caja.id}
                     className="btn-primary px-5 disabled:opacity-60 disabled:cursor-not-allowed"
                   >
@@ -306,6 +314,69 @@ export default function Supervisor() {
           </div>
         )}
       </div>
+
+      {modalCierre && (
+        <div
+          className="fixed inset-0 flex items-center justify-center p-4 z-50"
+          style={{ background: "rgba(0,0,0,0.45)" }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) cerrarModalCierre();
+          }}
+        >
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
+            <div className="w-12 h-12 bg-purple-50 text-purple-700 rounded-xl flex items-center justify-center mb-4">
+              <FaClipboardCheck className="w-5 h-5" />
+            </div>
+
+            <h3
+              className="text-lg font-extrabold mb-1"
+              style={{ fontFamily: "'Nunito', sans-serif" }}
+            >
+              ¿Confirmar cierre de caja?
+            </h3>
+
+            <p className="text-sm mb-4" style={{ color: "var(--text-mid)" }}>
+              ¿Estás seguro de que deseas confirmar el cierre de la caja{" "}
+              <strong>#{modalCierre.id}</strong>? Esta acción cambiará el estado
+              de la caja a cerrada.
+            </p>
+
+            <div className="rounded-xl bg-gray-50 border border-gray-100 p-4 text-sm mb-6 space-y-2">
+              <p>
+                <strong>Cajero:</strong> {modalCierre.cajero}
+              </p>
+              <p>
+                <strong>Efectivo contado:</strong>{" "}
+                {formatearSoles(modalCierre.efectivo_contado)}
+              </p>
+              <p>
+                <strong>Diferencia:</strong> {formatearSoles(modalCierre.diferencia)}
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                className="btn-secondary flex-1"
+                type="button"
+                onClick={cerrarModalCierre}
+                disabled={confirmando === modalCierre.id}
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="button"
+                onClick={confirmarCierreModal}
+                disabled={confirmando === modalCierre.id}
+                className="flex-1 inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm text-white bg-purple-600 hover:bg-purple-700 transition-all disabled:opacity-60"
+              >
+                {confirmando === modalCierre.id ? "Confirmando..." : "Sí, confirmar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
