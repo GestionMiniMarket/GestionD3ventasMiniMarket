@@ -25,7 +25,8 @@ const registrar = (req, res) => {
     res.status(201).json({ mensaje: 'Usuario registrado correctamente' });
   });
 };
-//login
+
+// Login
 const login = (req, res) => {
   const { email, password } = req.body;
 
@@ -33,23 +34,31 @@ const login = (req, res) => {
     return res.status(400).json({ mensaje: 'Correo y contraseña son requeridos' });
 
   const sql = `
-  SELECT u.*, r.nombre AS rol 
-  FROM usuarios u 
-  JOIN roles r ON u.rol_id = r.id 
-  WHERE u.email = ? AND u.activo = 1
-`;
-
+    SELECT u.*, r.nombre AS rol 
+    FROM usuarios u 
+    JOIN roles r ON u.rol_id = r.id 
+    WHERE u.email = ?
+  `;
 
   db.query(sql, [email], (err, results) => {
     if (err) return res.status(500).json({ mensaje: 'Error en el servidor' });
+    
+    // 1. Si el correo no existe en la BD o es un intento de SQL Injection
     if (results.length === 0)
-      return res.status(401).json({ mensaje: 'Usuario inactivo. Contacte al administrador.' });
+      return res.status(401).json({ mensaje: 'Credenciales incorrectas' });
 
     const usuario = results[0];
+
+    // 2. Si el usuario existe, pero su cuenta fue desactivada
+    if (usuario.activo !== 1)
+      return res.status(401).json({ mensaje: 'Usuario inactivo. Contacte al administrador.' });
+
+    // 3. Si existe y está activo, procedemos a comparar el hash bcrypt
     const passwordValida = bcrypt.compareSync(password, usuario.password);
     if (!passwordValida)
       return res.status(401).json({ mensaje: 'Credenciales incorrectas' });
 
+    // 4. Si todo está bien, generamos el token
     const token = jwt.sign(
       { id: usuario.id, nombre: usuario.nombre, rol: usuario.rol },
       process.env.JWT_SECRET,
