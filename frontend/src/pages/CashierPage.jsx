@@ -10,22 +10,21 @@ import { getProductos } from "../services/productosService";
 import { registrarVenta } from "../services/ventasService";
 import { getResumenCaja } from "../services/cajasService";
 
-const formatearSoles = (valor) => {
-  return new Intl.NumberFormat("es-PE", {
+const formatearSoles = (valor) =>
+  new Intl.NumberFormat("es-PE", {
     style: "currency",
     currency: "PEN",
   }).format(Number(valor || 0));
-};
 
 export default function Cajero() {
   const [productos, setProductos] = useState([]);
   const [busqueda, setBusqueda] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [mensaje, setMensaje] = useState("");
   const [carrito, setCarrito] = useState([]);
   const [metodoPago, setMetodoPago] = useState("efectivo");
   const [cajaId, setCajaId] = useState(null);
-  const [mensaje, setMensaje] = useState("");
   const [registrando, setRegistrando] = useState(false);
 
   const cargarProductos = async () => {
@@ -42,11 +41,12 @@ export default function Cajero() {
       setLoading(false);
     }
   };
+
   const cargarCajaActiva = async () => {
     try {
       const res = await getResumenCaja();
       setCajaId(res.data.caja_id);
-    } catch (err) {
+    } catch {
       setCajaId(null);
     }
   };
@@ -58,22 +58,41 @@ export default function Cajero() {
 
   const productosFiltrados = useMemo(() => {
     const texto = busqueda.toLowerCase().trim();
-  
-  
 
-    return productos.filter((producto) => {
-      return (
+    return productos.filter(
+      (producto) =>
         producto.nombre?.toLowerCase().includes(texto) ||
         producto.categoria?.toLowerCase().includes(texto)
-      );
-    });
+    );
   }, [productos, busqueda]);
 
   const agregarAlCarrito = (producto) => {
+    setError("");
+    setMensaje("");
+
+    const productoActivo =
+      producto.activo === undefined || Number(producto.activo) === 1;
+    const stock = Number(producto.stock || 0);
+
+    if (!productoActivo) {
+      setError("Este producto está desactivado y no puede venderse.");
+      return;
+    }
+
+    if (stock <= 0) {
+      setError("Este producto no tiene stock disponible.");
+      return;
+    }
+
     setCarrito((prev) => {
       const existe = prev.find((item) => item.id === producto.id);
 
       if (existe) {
+        if (existe.cantidad >= stock) {
+          setError("No puedes agregar más unidades que el stock disponible.");
+          return prev;
+        }
+
         return prev.map((item) =>
           item.id === producto.id
             ? { ...item, cantidad: item.cantidad + 1 }
@@ -81,21 +100,24 @@ export default function Cajero() {
         );
       }
 
-      return [
-        ...prev,
-        {
-          ...producto,
-          cantidad: 1,
-        },
-      ];
+      return [...prev, { ...producto, cantidad: 1 }];
     });
   };
 
   const aumentarCantidad = (id) => {
+    setError("");
+
     setCarrito((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, cantidad: item.cantidad + 1 } : item
-      )
+      prev.map((item) => {
+        if (item.id !== id) return item;
+
+        if (item.cantidad >= Number(item.stock || 0)) {
+          setError("No puedes vender más unidades que el stock disponible.");
+          return item;
+        }
+
+        return { ...item, cantidad: item.cantidad + 1 };
+      })
     );
   };
 
@@ -113,9 +135,10 @@ export default function Cajero() {
     setCarrito((prev) => prev.filter((item) => item.id !== id));
   };
 
-  const totalVenta = carrito.reduce((total, item) => {
-    return total + Number(item.precio) * item.cantidad;
-  }, 0);
+  const totalVenta = carrito.reduce(
+    (total, item) => total + Number(item.precio) * item.cantidad,
+    0
+  );
 
   const handleRegistrarVenta = async () => {
     setError("");
@@ -130,6 +153,17 @@ export default function Cajero() {
       setError("Agrega al menos un producto a la venta.");
       return;
     }
+
+    const sinStock = carrito.find(
+      (item) => item.cantidad > Number(item.stock || 0)
+    );
+
+    if (sinStock) {
+      setError(`No hay stock suficiente para ${sinStock.nombre}.`);
+      return;
+    }
+
+    if (!window.confirm("¿Desea registrar esta venta?")) return;
 
     try {
       setRegistrando(true);
@@ -167,12 +201,7 @@ export default function Cajero() {
             Punto de venta
           </span>
 
-          <h2
-            className="text-2xl font-extrabold"
-            style={{ fontFamily: "'Nunito', sans-serif" }}
-          >
-            Registro de venta
-          </h2>
+          <h2 className="text-2xl font-extrabold">Registro de venta</h2>
 
           <p className="text-sm mt-1" style={{ color: "var(--text-mid)" }}>
             Selecciona productos, arma la venta y registra el pago del cliente.
@@ -208,9 +237,7 @@ export default function Cajero() {
             </div>
 
             <div>
-              <h3 className="text-lg font-extrabold">
-                Productos disponibles
-              </h3>
+              <h3 className="text-lg font-extrabold">Productos disponibles</h3>
               <p className="text-sm" style={{ color: "var(--text-mid)" }}>
                 Busca productos por nombre o categoría.
               </p>
@@ -229,42 +256,75 @@ export default function Cajero() {
           </div>
 
           {loading ? (
-            <div className="text-sm" style={{ color: "var(--text-mid)" }}>
+            <p className="text-sm" style={{ color: "var(--text-mid)" }}>
               Cargando productos...
-            </div>
+            </p>
           ) : productosFiltrados.length === 0 ? (
-            <div className="text-sm" style={{ color: "var(--text-mid)" }}>
+            <p className="text-sm" style={{ color: "var(--text-mid)" }}>
               No se encontraron productos.
-            </div>
+            </p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {productosFiltrados.map((producto) => (
-                <div
-                  key={producto.id}
-                  className="border border-gray-100 rounded-2xl p-4 hover:bg-gray-50 transition-all"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="font-bold text-sm">{producto.nombre}</p>
-                      <p className="text-xs mt-1" style={{ color: "var(--text-mid)" }}>
-                        {producto.categoria}
-                      </p>
-                      <p className="text-sm font-extrabold mt-3">
-                        {formatearSoles(producto.precio)}
-                      </p>
-                    </div>
+              {productosFiltrados.map((producto) => {
+                const productoActivo =
+                  producto.activo === undefined || Number(producto.activo) === 1;
+                const tieneStock = Number(producto.stock || 0) > 0;
 
-                    <button
-                    type="button"
-                    onClick={() => agregarAlCarrito(producto)}
-                    className="w-9 h-9 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center hover:bg-blue-100"
-                    title="Agregar producto"
+                return (
+                  <div
+                    key={producto.id}
+                    className={`border rounded-2xl p-4 transition-all ${
+                      !productoActivo
+                        ? "bg-gray-100 border-gray-200 opacity-70"
+                        : "border-gray-100 hover:bg-gray-50"
+                    }`}
                   >
-                    <FaPlus className="text-sm" />
-                  </button>
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="font-bold text-sm">{producto.nombre}</p>
+
+                        <p className="text-xs mt-1" style={{ color: "var(--text-mid)" }}>
+                          {producto.categoria}
+                        </p>
+
+                        <p className="text-xs mt-1" style={{ color: "var(--text-mid)" }}>
+                          Stock: {producto.stock}
+                        </p>
+
+                        {!productoActivo && (
+                          <p className="text-xs font-bold text-red-600 mt-1">
+                            Producto desactivado
+                          </p>
+                        )}
+
+                        {productoActivo && !tieneStock && (
+                          <p className="text-xs font-bold text-amber-600 mt-1">
+                            Sin stock
+                          </p>
+                        )}
+
+                        <p className="text-sm font-extrabold mt-3">
+                          {formatearSoles(producto.precio)}
+                        </p>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => agregarAlCarrito(producto)}
+                        disabled={!productoActivo || !tieneStock}
+                        className={`w-9 h-9 rounded-xl flex items-center justify-center ${
+                          !productoActivo || !tieneStock
+                            ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                            : "bg-blue-50 text-blue-700 hover:bg-blue-100"
+                        }`}
+                        title="Agregar producto"
+                      >
+                        <FaPlus className="text-sm" />
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
@@ -284,15 +344,12 @@ export default function Cajero() {
           ) : (
             <div className="space-y-3">
               {carrito.map((item) => (
-                <div
-                  key={item.id}
-                  className="p-3 rounded-2xl border border-gray-100 bg-gray-50"
-                >
+                <div key={item.id} className="p-3 rounded-2xl border border-gray-100 bg-gray-50">
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="font-bold text-sm">{item.nombre}</p>
                       <p className="text-xs" style={{ color: "var(--text-mid)" }}>
-                        {formatearSoles(item.precio)} c/u
+                        {formatearSoles(item.precio)} c/u · Stock: {item.stock}
                       </p>
                     </div>
 
@@ -322,7 +379,8 @@ export default function Cajero() {
                       <button
                         type="button"
                         onClick={() => aumentarCantidad(item.id)}
-                        className="w-8 h-8 rounded-lg bg-white border border-gray-200 font-bold"
+                        disabled={item.cantidad >= Number(item.stock || 0)}
+                        className="w-8 h-8 rounded-lg bg-white border border-gray-200 font-bold disabled:opacity-40 disabled:cursor-not-allowed"
                       >
                         +
                       </button>
@@ -343,54 +401,53 @@ export default function Cajero() {
                   </span>
                 </div>
               </div>
-              
+
               <div className="mt-5">
-              <p className="text-sm font-bold mb-3">Método de pago</p>
+                <p className="text-sm font-bold mb-3">Método de pago</p>
 
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => setMetodoPago("efectivo")}
-                  className={`rounded-xl border px-3 py-3 text-sm font-bold flex items-center justify-center gap-2 ${
-                    metodoPago === "efectivo"
-                      ? "bg-green-50 border-green-200 text-green-700"
-                      : "bg-white border-gray-200 text-gray-600"
-                  }`}
-                >
-                  <FaMoneyBillWave />
-                  Efectivo
-                </button>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setMetodoPago("efectivo")}
+                    className={`rounded-xl border px-3 py-3 text-sm font-bold flex items-center justify-center gap-2 ${
+                      metodoPago === "efectivo"
+                        ? "bg-green-50 border-green-200 text-green-700"
+                        : "bg-white border-gray-200 text-gray-600"
+                    }`}
+                  >
+                    <FaMoneyBillWave />
+                    Efectivo
+                  </button>
 
-                <button
-                  type="button"
-                  onClick={() => setMetodoPago("tarjeta")}
-                  className={`rounded-xl border px-3 py-3 text-sm font-bold flex items-center justify-center gap-2 ${
-                    metodoPago === "tarjeta"
-                      ? "bg-blue-50 border-blue-200 text-blue-700"
-                      : "bg-white border-gray-200 text-gray-600"
-                  }`}
-                >
-                  <FaCreditCard />
-                  Tarjeta
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => setMetodoPago("tarjeta")}
+                    className={`rounded-xl border px-3 py-3 text-sm font-bold flex items-center justify-center gap-2 ${
+                      metodoPago === "tarjeta"
+                        ? "bg-blue-50 border-blue-200 text-blue-700"
+                        : "bg-white border-gray-200 text-gray-600"
+                    }`}
+                  >
+                    <FaCreditCard />
+                    Tarjeta
+                  </button>
+                </div>
               </div>
-            </div>
 
-            <button
-              type="button"
-              onClick={handleRegistrarVenta}
-              disabled={registrando || carrito.length === 0}
-              className="btn-primary w-full mt-5 disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              {registrando ? "Registrando..." : "Registrar venta"}
-            </button>
+              <button
+                type="button"
+                onClick={handleRegistrarVenta}
+                disabled={registrando || carrito.length === 0}
+                className="btn-primary w-full mt-5 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {registrando ? "Registrando..." : "Registrar venta"}
+              </button>
 
-            {!cajaId && (
-              <p className="text-xs text-red-600 font-semibold mt-3">
-                No hay una caja abierta. Abre caja antes de vender.
-              </p>
-            )}
-
+              {!cajaId && (
+                <p className="text-xs text-red-600 font-semibold mt-3">
+                  No hay una caja abierta. Abre caja antes de vender.
+                </p>
+              )}
             </div>
           )}
         </div>

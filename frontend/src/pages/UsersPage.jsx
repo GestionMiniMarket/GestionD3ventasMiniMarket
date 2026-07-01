@@ -18,7 +18,17 @@ const rolBadge = {
   Supervisor:    "bg-purple-100 text-purple-800",
 };
 
+
 const emptyForm = { nombre: "", email: "", password: "", rol_id: 2 };
+
+const emailValido = (email) => {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+};
+
+const esAdministrador = (usuario) => {
+  return usuario?.rol === "Administrador" || Number(usuario?.rol_id) === 1;
+};
+
 
 export default function Usuarios() {
   const [usuarios, setUsuarios] = useState([]);
@@ -63,6 +73,11 @@ export default function Usuarios() {
   };
 
   const abrirEliminar = (u) => {
+    if (esAdministrador(u)) {
+      alert("No se puede desactivar un usuario Administrador.");
+      return;
+    }
+
     setSelected(u);
     setModal("eliminar");
   };
@@ -76,7 +91,12 @@ export default function Usuarios() {
 
   const handleGuardar = async () => {
     if (!form.nombre || !form.email) {
-      setFormError("Nombre y correo on obligatorios.");
+      setFormError("Nombre y correo son obligatorios.");
+      return;
+    }
+
+    if (!emailValido(form.email)) {
+      setFormError("Ingrese un correo válido. Ejemplo: usuario@gmail.com");
       return;
     }
     if (modal === "crear" && !form.password) {
@@ -204,9 +224,14 @@ export default function Usuarios() {
                         </button>
                         <button
                           onClick={() => abrirEliminar(u)}
-                          className="text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-red-50 transition-colors text-red-600"
+                          disabled={esAdministrador(u)}
+                          className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors ${
+                            esAdministrador(u)
+                              ? "text-gray-400 cursor-not-allowed bg-gray-50"
+                              : "hover:bg-red-50 text-red-600"
+                          }`}
                         >
-                          Desactivar
+                          {esAdministrador(u) ? "Protegido" : "Desactivar"}
                         </button>
                       </div>
                     </td>
