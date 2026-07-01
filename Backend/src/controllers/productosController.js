@@ -3,15 +3,19 @@ const db = require('../config/db');
 const listarProductos = (req, res) => {
   const sql = `
     SELECT p.id, p.nombre, p.descripcion, p.precio,
+           p.stock, p.stock_minimo, p.activo,
            p.categoria_id, c.nombre AS categoria
     FROM productos p
     JOIN categorias c ON p.categoria_id = c.id
-    WHERE p.activo = 1
-    ORDER BY p.nombre ASC
+    ORDER BY p.activo DESC, p.nombre ASC
   `;
 
   db.query(sql, (err, results) => {
-    if (err) return res.status(500).json({ mensaje: 'Error en el servidor' });
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ mensaje: 'Error en el servidor' });
+    }
+
     res.json(results);
   });
 };
