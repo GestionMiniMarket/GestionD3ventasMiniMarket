@@ -1,27 +1,42 @@
-import { Link, useLocation } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import {
   FaBasketShopping,
   FaChartPie,
   FaBoxesStacked,
   FaWarehouse,
-  FaUsersGear,
   FaUsers,
   FaChartLine,
   FaCashRegister,
   FaRightFromBracket,
   FaCircleCheck,
+  FaStore,
+  FaMoneyBillTrendUp,
+  FaClipboardCheck,
 } from "react-icons/fa6";
 
-const NavItem = ({ to, icon: Icon, label }) => {
-  const { pathname } = useLocation();
-  const active = pathname === to;
+const NavSection = ({ title, children }) => (
+  <div className="mt-5 first:mt-0">
+    <p className="px-4 text-white/35 text-[11px] font-bold uppercase tracking-[0.18em] mb-2">
+      {title}
+    </p>
+    <div className="space-y-1">{children}</div>
+  </div>
+);
 
+const NavItem = ({ to, icon: Icon, label }) => {
   return (
-    <Link to={to} className={`nav-link ${active ? "active" : ""}`}>
-      <Icon className="text-sm shrink-0" />
-      <span>{label}</span>
-      {active && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-white" />}
-    </Link>
+    <NavLink
+      to={to}
+      className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}
+    >
+      {({ isActive }) => (
+        <>
+          <Icon className="text-sm shrink-0" />
+          <span>{label}</span>
+          {isActive && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-white" />}
+        </>
+      )}
+    </NavLink>
   );
 };
 
@@ -39,12 +54,16 @@ export default function Layout({ children }) {
     Supervisor: "bg-purple-100 text-purple-800",
   }[rol] || "bg-gray-100 text-gray-700";
 
+  const puedeAdministrar = rol === "Administrador";
+  const puedeVender = rol === "Administrador" || rol === "Cajero";
+  const puedeVerReportes = rol === "Administrador" || rol === "Supervisor";
+
   return (
     <div className="flex h-screen overflow-hidden" style={{ background: "var(--surface)" }}>
       <aside className="w-64 shrink-0 flex flex-col bg-[#101828]">
         <div className="flex items-center gap-3 px-5 py-6 border-b border-white/10">
           <div className="w-10 h-10 rounded-2xl bg-white/10 border border-white/10 flex items-center justify-center">
-            <FaBasketShopping className="text-emerald-300 text-lg" />
+            <FaStore className="text-emerald-300 text-lg" />
           </div>
 
           <div>
@@ -55,41 +74,47 @@ export default function Layout({ children }) {
           </div>
         </div>
 
-        <nav className="flex-1 px-3 py-5 space-y-1 overflow-y-auto">
-          <p className="px-4 text-white/35 text-[11px] font-bold uppercase tracking-[0.18em] mb-2">
-            Principal
-          </p>
+        <nav className="flex-1 px-3 py-5 overflow-y-auto">
+          <NavSection title="Principal">
+            <NavItem to="/dashboard" icon={FaChartPie} label="Dashboard" />
+          </NavSection>
 
-          <NavItem to="/dashboard" icon={FaChartPie} label="Dashboard" />
-          <NavItem to="/productos" icon={FaBoxesStacked} label="Productos" />
-          <NavItem to="/inventario" icon={FaWarehouse} label="Inventario" />
+          <NavSection title="Operaciones">
+            {puedeAdministrar && (
+              <>
+                <NavItem to="/productos" icon={FaBoxesStacked} label="Productos" />
+                <NavItem to="/inventario" icon={FaWarehouse} label="Inventario" />
+              </>
+            )}
 
-          {rol === "Administrador" && (
-            <>
-              <p className="px-4 text-white/35 text-[11px] font-bold uppercase tracking-[0.18em] mb-2 mt-5">
-                Administración
-              </p>
-              <NavItem to="/admin" icon={FaUsersGear} label="Panel Admin" />
+            {puedeVender && (
+              <>
+                <NavItem to="/cajero" icon={FaBasketShopping} label="Punto de venta" />
+                <NavItem to="/caja" icon={FaCashRegister} label="Caja" />
+              </>
+            )}
+          </NavSection>
+
+          {puedeAdministrar && (
+            <NavSection title="Administración">
               <NavItem to="/usuarios" icon={FaUsers} label="Usuarios" />
-            </>
+            </NavSection>
           )}
 
-          {rol === "Supervisor" && (
-            <>
-              <p className="px-4 text-white/35 text-[11px] font-bold uppercase tracking-[0.18em] mb-2 mt-5">
-                Supervisión
-              </p>
-              <NavItem to="/supervisor" icon={FaChartLine} label="Reportes" />
-            </>
-          )}
+          {puedeVerReportes && (
+            <NavSection title="Reportes">
+              <NavItem
+                to="/supervisor"
+                icon={FaClipboardCheck}
+                label="Gestión de cierres"
+              />
 
-          {rol === "Cajero" && (
-            <>
-              <p className="px-4 text-white/35 text-[11px] font-bold uppercase tracking-[0.18em] mb-2 mt-5">
-                Caja
-              </p>
-              <NavItem to="/cajero" icon={FaCashRegister} label="Ventas" />
-            </>
+              <NavItem
+                to="/reportes"
+                icon={FaChartLine}
+                label="Reportes"
+              />
+            </NavSection>
           )}
         </nav>
 
@@ -126,12 +151,7 @@ export default function Layout({ children }) {
               Sistema de ventas
             </h1>
             <p className="text-xs" style={{ color: "var(--text-mid)" }}>
-              {new Date().toLocaleDateString("es-PE", {
-                weekday: "long",
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
+              Gestión de operaciones, caja, inventario y reportes
             </p>
           </div>
 
@@ -139,6 +159,11 @@ export default function Layout({ children }) {
             <div className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl bg-green-50 text-green-700 text-xs font-bold">
               <FaCircleCheck className="text-xs" />
               Sesión activa
+            </div>
+
+            <div className="hidden md:flex items-center gap-2 px-3 py-2 rounded-xl bg-blue-50 text-blue-700 text-xs font-bold">
+              <FaMoneyBillTrendUp className="text-xs" />
+              {rol}
             </div>
 
             <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-xs font-extrabold bg-[#101828]">

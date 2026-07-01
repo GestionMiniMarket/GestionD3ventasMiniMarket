@@ -30,9 +30,9 @@ export default function Login() {
 
       const rol = res.data.rol;
 
-      if (rol === "Administrador") window.location.href = "/admin";
+      if (rol === "Administrador") window.location.href = "/dashboard";
       else if (rol === "Cajero") window.location.href = "/cajero";
-      else if (rol === "Supervisor") window.location.href = "/supervisor";
+      else if (rol === "Supervisor") window.location.href = "/reportes";
       else window.location.href = "/";
     } catch {
       setError("Correo o contraseña incorrectos.");
