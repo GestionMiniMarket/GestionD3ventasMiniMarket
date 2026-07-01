@@ -21,6 +21,9 @@ export default function CajaPage() {
   const [efectivoContado, setEfectivoContado] = useState("");
   const [resultadoCierre, setResultadoCierre] = useState(null);
 
+  const [modalConfirmacion, setModalConfirmacion] = useState(null);
+  const [procesandoAccion, setProcesandoAccion] = useState(false);
+
   const cargarResumen = async () => {
     try {
       const res = await getResumenCaja();
@@ -36,7 +39,18 @@ export default function CajaPage() {
     cargarResumen();
   }, []);
 
-  const handleAbrirCaja = async () => {
+  const abrirModalConfirmacion = (tipo) => {
+    setMensaje("");
+    setError("");
+    setModalConfirmacion({ tipo });
+  };
+
+  const cerrarModalConfirmacion = () => {
+    if (procesandoAccion) return;
+    setModalConfirmacion(null);
+  };
+
+  const handleAbrirCaja = () => {
     setMensaje("");
     setError("");
 
@@ -45,23 +59,10 @@ export default function CajaPage() {
       return;
     }
 
-    try {
-      setLoading(true);
-    
-      const res = await abrirCaja(Number(montoInicial));
-
-      setMensaje(res.data.mensaje);
-      setMontoInicial("");
-      setResultadoCierre(null);
-      await cargarResumen();
-    } catch (err) {
-      setError(err.response?.data?.mensaje || "No fue posible abrir la caja.");
-    } finally {
-      setLoading(false);
-    }
+    abrirModalConfirmacion("abrir");
   };
-  
-  const handleRegistrarEgreso = async () => {
+
+  const handleRegistrarEgreso = () => {
     setMensaje("");
     setError("");
 
@@ -70,30 +71,10 @@ export default function CajaPage() {
       return;
     }
 
-    if (!window.confirm("¿Desea registrar este egreso?")) {
-        return;
-    }
-
-    try {
-      await registrarEgreso({
-        motivo,
-        monto: Number(montoEgreso),
-      });
-
-      setMensaje("Egreso registrado correctamente.");
-      setMotivo("");
-      setMontoEgreso("");
-      setMostrarEgreso(false);
-
-      await cargarResumen();
-    } catch (err) {
-      setError(err.response?.data?.mensaje || "Error al registrar egreso.");
-    }
+    abrirModalConfirmacion("egreso");
   };
 
-
-
-  const handleSolicitarCierre = async () => {
+  const handleSolicitarCierre = () => {
     setMensaje("");
     setError("");
 
@@ -102,21 +83,77 @@ export default function CajaPage() {
       return;
     }
 
-    if (!window.confirm("¿Desea solicitar el cierre de caja?")) {
-        return;
-    }
+    abrirModalConfirmacion("cierre");
+  };
+
+  const confirmarAccionCaja = async () => {
+    if (!modalConfirmacion) return;
+
+    const { tipo } = modalConfirmacion;
 
     try {
-      const res = await solicitarCierre(Number(efectivoContado));
+      setProcesandoAccion(true);
+      setLoading(true);
 
-      setResultadoCierre(res.data);
-      setMensaje(res.data.mensaje);
-      setEfectivoContado("");
+      if (tipo === "abrir") {
+        const res = await abrirCaja(Number(montoInicial));
+        setMensaje(res.data.mensaje);
+        setMontoInicial("");
+        setResultadoCierre(null);
+      }
 
+      if (tipo === "egreso") {
+        await registrarEgreso({
+          motivo,
+          monto: Number(montoEgreso),
+        });
+
+        setMensaje("Egreso registrado correctamente.");
+        setMotivo("");
+        setMontoEgreso("");
+        setMostrarEgreso(false);
+      }
+
+      if (tipo === "cierre") {
+        const res = await solicitarCierre(Number(efectivoContado));
+        setResultadoCierre(res.data);
+        setMensaje(res.data.mensaje);
+        setEfectivoContado("");
+      }
+
+      setError("");
+      setModalConfirmacion(null);
       await cargarResumen();
     } catch (err) {
-      setError(err.response?.data?.mensaje || "No se pudo solicitar el cierre.");
+      const mensajes = {
+        abrir: "No fue posible abrir la caja.",
+        egreso: "Error al registrar egreso.",
+        cierre: "No se pudo solicitar el cierre.",
+      };
+
+      setError(err.response?.data?.mensaje || mensajes[tipo]);
+    } finally {
+      setProcesandoAccion(false);
+      setLoading(false);
     }
+  };
+
+  const tituloModal = {
+    abrir: "¿Confirmar apertura de caja?",
+    egreso: "¿Confirmar egreso?",
+    cierre: "¿Confirmar solicitud de cierre?",
+  };
+
+  const textoModal = {
+    abrir: `¿Deseas abrir la caja con un monto inicial de S/ ${Number(montoInicial || 0).toFixed(2)}?`,
+    egreso: `¿Deseas registrar el egreso "${motivo}" por S/ ${Number(montoEgreso || 0).toFixed(2)}?`,
+    cierre: `¿Deseas solicitar el cierre de caja con S/ ${Number(efectivoContado || 0).toFixed(2)} como efectivo contado? Ya no podrás registrar ventas en esta caja.`,
+  };
+
+  const botonModal = {
+    abrir: "Sí, abrir caja",
+    egreso: "Sí, registrar",
+    cierre: "Sí, solicitar cierre",
   };
 
   return (
@@ -129,15 +166,15 @@ export default function CajaPage() {
           Apertura, control y cierre de caja.
         </p>
         <div className="mt-4">
-            {cajaAbierta ? (
-                <span className="inline-flex items-center px-3 py-1 rounded-full bg-green-100 text-green-700 text-sm font-semibold">
-                    🟢 Caja abierta
-                </span>
-            ) : (
-                <span className="inline-flex items-center px-3 py-1 rounded-full bg-red-100 text-red-700 text-sm font-semibold">
-                    🔴 Sin caja abierta
-                </span>
-            )}
+          {cajaAbierta ? (
+            <span className="inline-flex items-center px-3 py-1 rounded-full bg-green-100 text-green-700 text-sm font-semibold">
+              🟢 Caja abierta
+            </span>
+          ) : (
+            <span className="inline-flex items-center px-3 py-1 rounded-full bg-red-100 text-red-700 text-sm font-semibold">
+              🔴 Sin caja abierta
+            </span>
+          )}
         </div>
       </div>
 
@@ -149,23 +186,23 @@ export default function CajaPage() {
             type="number"
             placeholder="Monto inicial"
             className={`input-field w-full mb-4 ${
-                cajaAbierta ? "bg-gray-100 cursor-not-allowed" : ""
+              cajaAbierta ? "bg-gray-100 cursor-not-allowed" : ""
             }`}
             value={montoInicial}
             onChange={(e) => setMontoInicial(e.target.value)}
             disabled={cajaAbierta}
           />
 
-          <button onClick={handleAbrirCaja} disabled={loading || cajaAbierta} className={`w-full ${
-                cajaAbierta
-                    ? "bg-gray-300 cursor-not-allowed text-gray-600"
-                    : "btn-primary"
-            }`}>
-            {loading
-            ? "Abriendo..."
-            : cajaAbierta
-            ? "Caja abierta"
-            : "Abrir caja"}
+          <button
+            onClick={handleAbrirCaja}
+            disabled={loading || cajaAbierta}
+            className={`w-full ${
+              cajaAbierta
+                ? "bg-gray-300 cursor-not-allowed text-gray-600"
+                : "btn-primary"
+            }`}
+          >
+            {loading ? "Procesando..." : cajaAbierta ? "Caja abierta" : "Abrir caja"}
           </button>
 
           {mensaje && <div className="mt-4 text-green-600 text-sm font-semibold">{mensaje}</div>}
@@ -200,9 +237,9 @@ export default function CajaPage() {
             onClick={() => setMostrarEgreso(!mostrarEgreso)}
             disabled={!cajaAbierta}
             className={`w-full mb-3 ${
-                cajaAbierta
-                    ? "btn-primary"
-                    : "bg-gray-300 text-gray-600 cursor-not-allowed"
+              cajaAbierta
+                ? "btn-primary"
+                : "bg-gray-300 text-gray-600 cursor-not-allowed"
             }`}
           >
             Registrar egreso
@@ -240,13 +277,15 @@ export default function CajaPage() {
             onChange={(e) => setEfectivoContado(e.target.value)}
           />
 
-          <button onClick={handleSolicitarCierre} 
-          disabled={!cajaAbierta} 
-          className={`w-full ${
-                cajaAbierta
-                    ? "btn-primary"
-                    : "bg-gray-300 text-gray-600 cursor-not-allowed"
-            }`}>
+          <button
+            onClick={handleSolicitarCierre}
+            disabled={!cajaAbierta}
+            className={`w-full ${
+              cajaAbierta
+                ? "btn-primary"
+                : "bg-gray-300 text-gray-600 cursor-not-allowed"
+            }`}
+          >
             Solicitar cierre
           </button>
 
@@ -271,6 +310,53 @@ export default function CajaPage() {
           )}
         </div>
       </div>
+
+      {modalConfirmacion && (
+        <div
+          className="fixed inset-0 flex items-center justify-center p-4 z-50"
+          style={{ background: "rgba(0,0,0,0.45)" }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) cerrarModalConfirmacion();
+          }}
+        >
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
+            <div className="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center mb-4 text-xl">
+              💵
+            </div>
+
+            <h3
+              className="text-lg font-extrabold mb-1"
+              style={{ fontFamily: "'Nunito', sans-serif" }}
+            >
+              {tituloModal[modalConfirmacion.tipo]}
+            </h3>
+
+            <p className="text-sm mb-6" style={{ color: "var(--text-mid)" }}>
+              {textoModal[modalConfirmacion.tipo]}
+            </p>
+
+            <div className="flex gap-3">
+              <button
+                className="btn-secondary flex-1"
+                type="button"
+                onClick={cerrarModalConfirmacion}
+                disabled={procesandoAccion}
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="button"
+                onClick={confirmarAccionCaja}
+                disabled={procesandoAccion}
+                className="flex-1 inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm text-white bg-green-600 hover:bg-green-700 transition-all disabled:opacity-60"
+              >
+                {procesandoAccion ? "Procesando..." : botonModal[modalConfirmacion.tipo]}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
