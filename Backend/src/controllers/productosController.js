@@ -1,5 +1,13 @@
 const db = require('../config/db');
+const validarPrecio = (precio) => {
+  const precioNumber = Number(precio);
 
+  if (!Number.isFinite(precioNumber) || precioNumber <= 0) {
+    return false;
+  }
+
+  return true;
+};
 const listarProductos = (req, res) => {
   const sql = `
     SELECT p.id, p.nombre, p.descripcion, p.precio,
@@ -23,8 +31,16 @@ const listarProductos = (req, res) => {
 const crearProducto = (req, res) => {
   const { nombre, precio, categoria_id, descripcion } = req.body;
 
-  if (!nombre || !precio || !categoria_id) {
-    return res.status(400).json({ mensaje: 'Nombre, precio y categoría son requeridos' });
+  if (!nombre || precio === undefined || precio === null || precio === "" || !categoria_id) {
+    return res.status(400).json({
+      mensaje: 'Nombre, precio y categoría son requeridos'
+    });
+  }
+
+  if (!validarPrecio(precio)) {
+    return res.status(400).json({
+      mensaje: 'El precio debe ser mayor a 0.'
+    });
   }
 
   const sql = `
@@ -32,9 +48,16 @@ const crearProducto = (req, res) => {
     VALUES (?, ?, ?, 0, 5, ?, 1)
   `;
 
-  db.query(sql, [nombre, descripcion || null, precio, categoria_id], (err, result) => {
-    if (err) return res.status(500).json({ mensaje: 'Error en el servidor' });
-    res.status(201).json({ mensaje: 'Producto creado correctamente', id: result.insertId });
+  db.query(sql, [nombre, descripcion || null, Number(precio), categoria_id], (err, result) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ mensaje: 'Error en el servidor' });
+    }
+
+    res.status(201).json({
+      mensaje: 'Producto creado correctamente',
+      id: result.insertId
+    });
   });
 };
 
@@ -42,8 +65,16 @@ const editarProducto = (req, res) => {
   const { id } = req.params;
   const { nombre, precio, categoria_id, descripcion } = req.body;
 
-  if (!nombre || !precio || !categoria_id) {
-    return res.status(400).json({ mensaje: 'Nombre, precio y categoría son requeridos' });
+  if (!nombre || precio === undefined || precio === null || precio === "" || !categoria_id) {
+    return res.status(400).json({
+      mensaje: 'Nombre, precio y categoría son requeridos'
+    });
+  }
+
+  if (!validarPrecio(precio)) {
+    return res.status(400).json({
+      mensaje: 'El precio debe ser mayor a 0.'
+    });
   }
 
   const sql = `
@@ -52,8 +83,11 @@ const editarProducto = (req, res) => {
     WHERE id = ? AND activo = 1
   `;
 
-  db.query(sql, [nombre, descripcion || null, precio, categoria_id, id], (err, result) => {
-    if (err) return res.status(500).json({ mensaje: 'Error en el servidor' });
+  db.query(sql, [nombre, descripcion || null, Number(precio), categoria_id, id], (err, result) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ mensaje: 'Error en el servidor' });
+    }
 
     if (result.affectedRows === 0) {
       return res.status(404).json({ mensaje: 'Producto no encontrado' });

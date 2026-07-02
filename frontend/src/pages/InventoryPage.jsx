@@ -110,10 +110,16 @@ export default function Productos() {
     }));
   };
 
-  const guardarProducto = async (e) => {
+const guardarProducto = async (e) => {
     e.preventDefault();
-    setGuardando(true);
     setError("");
+
+    if (Number(formProducto.precio) <= 0) {
+      setError("El precio debe ser mayor a 0.");
+      return;
+    }
+
+    setGuardando(true);
 
     try {
       const payload = {
@@ -491,7 +497,7 @@ export default function Productos() {
                     value={formProducto.precio}
                     onChange={manejarCambio}
                     placeholder="0.00"
-                    min="0"
+                    min="0.01"
                     step="0.01"
                     required
                   />
