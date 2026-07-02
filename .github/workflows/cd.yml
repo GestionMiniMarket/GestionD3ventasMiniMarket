@@ -1,0 +1,27 @@
+name: MiniMarket Pro - Entrega Continua
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  delivery:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Instalar dependencias de produccion del Backend
+        run: |
+          cd Backend
+          npm install --production
+
+      - name: Preparar despliegue
+        run: |
+          echo "Build de producción finalizado. Listo para despliegue en Railway."
