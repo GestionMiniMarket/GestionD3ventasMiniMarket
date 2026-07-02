@@ -182,3 +182,17 @@
     border-right-color: var(--border);
   }
 }
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+table {
+  min-width: 700px;
+}
