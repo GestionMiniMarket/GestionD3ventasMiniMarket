@@ -21,6 +21,10 @@ const rolBadge = {
 
 const emptyForm = { nombre: "", email: "", password: "", rol_id: 2 };
 
+const normalizarCorreo = (email = "") => {
+  return email.trim().toLowerCase();
+};
+
 const emailValido = (email) => {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 };
@@ -89,6 +93,20 @@ export default function Usuarios() {
     setFormError("");
   };
 
+  const correoYaRegistrado = () => {
+    const correoForm = normalizarCorreo(form.email);
+
+    return usuarios.some((usuario) => {
+      const correoUsuario = normalizarCorreo(usuario.email);
+
+      if (modal === "editar" && selected?.id === usuario.id) {
+        return false;
+      }
+
+      return correoUsuario === correoForm;
+    });
+  };
+
   const handleGuardar = async () => {
     if (!form.nombre || !form.email) {
       setFormError("Nombre y correo son obligatorios.");
@@ -99,6 +117,10 @@ export default function Usuarios() {
       setFormError("Ingrese un correo válido. Ejemplo: usuario@gmail.com");
       return;
     }
+    if (correoYaRegistrado()) {
+      setFormError("Correo ya registrado.");
+      return;
+    }
     if (modal === "crear" && !form.password) {
     setFormError("La contraseña es obligatoria.");
     return;
@@ -106,10 +128,17 @@ export default function Usuarios() {
     setSaving(true);
     try {
       if (modal === "crear") {
-        await createUsuario(form);
+        await createUsuario({
+          ...form,
+          email: normalizarCorreo(form.email),
+        });
         alert("Usuario creado correctamente");
       } else {
-        const payload = { nombre: form.nombre, email: form.email, rol_id: Number(form.rol_id) };
+        const payload = {
+          nombre: form.nombre,
+          email: normalizarCorreo(form.email),
+          rol_id: Number(form.rol_id),
+        };
         await updateUsuario(selected.id, payload);
         alert("Usuario actualizado correctamente");
       }
