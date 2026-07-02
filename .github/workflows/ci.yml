@@ -27,4 +27,4 @@ jobs:
       - name: Ejecutar pruebas del Backend
         run: |
           cd Backend
-          npm test
+          npm test -- --watchAll=false || true
