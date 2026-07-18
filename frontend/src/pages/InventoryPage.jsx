@@ -115,7 +115,7 @@ const guardarProducto = async (e) => {
     setError("");
 
     if (Number(formProducto.precio) <= 0) {
-      setError("El precio debe ser mayor a 0.");
+      setError("El precio debe ser mayor a 0");
       return;
     }
 
@@ -497,8 +497,8 @@ const guardarProducto = async (e) => {
                     value={formProducto.precio}
                     onChange={manejarCambio}
                     placeholder="0.00"
-                    min="0.01"
-                    step="0.01"
+                    min="0"
+                    step="0"
                     required
                   />
                 </div>

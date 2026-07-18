@@ -86,7 +86,7 @@ export default function StockPage() {
     e.preventDefault();
 
     if (!cantidad || Number(cantidad) <= 0) {
-      setError("La cantidad a agregar debe ser mayor a 0.");
+      setError("La cantidad a agregar debe ser mayor a 0");
       return;
     }
 

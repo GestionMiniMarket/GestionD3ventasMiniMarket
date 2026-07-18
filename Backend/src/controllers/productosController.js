@@ -39,7 +39,7 @@ const crearProducto = (req, res) => {
 
   if (!validarPrecio(precio)) {
     return res.status(400).json({
-      mensaje: 'El precio debe ser mayor a 0.'
+      mensaje: 'El precio debe ser mayor a 0'
     });
   }
 
@@ -73,7 +73,7 @@ const editarProducto = (req, res) => {
 
   if (!validarPrecio(precio)) {
     return res.status(400).json({
-      mensaje: 'El precio debe ser mayor a 0.'
+      mensaje: 'El precio debe ser mayor a 0'
     });
   }
 
