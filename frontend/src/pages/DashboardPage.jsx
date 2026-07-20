@@ -79,7 +79,7 @@ export default function Dashboard() {
     {
       titulo: "Cajas abiertas",
       valor: resumen.cajas_activas,
-      detalle: "Turnos de caja activos actualmente",
+      detalle: "Cajas activas",
       icono: FaBasketShopping,
       color: "#7c3aed",
       fondo: "#f3e8ff",
