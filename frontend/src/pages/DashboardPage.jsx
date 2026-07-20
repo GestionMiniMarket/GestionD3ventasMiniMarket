@@ -55,7 +55,7 @@ export default function Dashboard() {
     {
       titulo: "Ingresos de hoy",
       valor: formatearSoles(resumen.ingresos_hoy),
-      detalle: `${resumen.ventas_hoy} registros de ventas hoy`,
+      detalle: `${resumen.ventas_hoy} ventas registradas hoy`,
       icono: FaCashRegister,
       color: "#15803d",
       fondo: "#dcfce7",
