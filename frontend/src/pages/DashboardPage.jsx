@@ -63,7 +63,7 @@ export default function Dashboard() {
     {
       titulo: "Productos activos",
       valor: resumen.total_productos,
-      detalle: "Productos disponibles en el catálogo",
+      detalle: "Productos disponibles en el Inventario",
       icono: FaBoxesStacked,
       color: "#2563eb",
       fondo: "#dbeafe",
