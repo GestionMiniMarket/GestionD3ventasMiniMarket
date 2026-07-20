@@ -4,6 +4,7 @@ import Dashboard from "./pages/DashboardPage";
 import PrivateRoute from "./router/PrivateRoute";
 import Layout from "./components/layout/MainLayout";
 import Productos from "./pages/InventoryPage";
+import Categorias from "./pages/CategoriasPage";
 import Cajero from "./pages/CashierPage";
 import Supervisor from "./pages/SupervisorPage";
 import RoleRoute from "./router/RoleRoute";
@@ -90,6 +91,17 @@ function App() {
             <RoleRoute rolesPermitidos={["Administrador", "Supervisor"]}>
               <Layout>
                 <ReportesPage />
+              </Layout>
+            </RoleRoute>
+          }
+        />
+
+        <Route
+          path="/categorias"
+          element={
+            <RoleRoute rolPermitido="Administrador">
+              <Layout>
+                <Categorias />
               </Layout>
             </RoleRoute>
           }

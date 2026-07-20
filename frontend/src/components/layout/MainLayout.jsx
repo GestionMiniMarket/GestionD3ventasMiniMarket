@@ -142,15 +142,21 @@ export default function Layout({ children }) {
         </NavSection>
 
         {puedeAdministrar && (
-          <NavSection title="Administración">
-            <NavItem
-              to="/usuarios"
-              icon={FaUsers}
-              label="Usuarios"
-              onClick={cerrarMenuMovil}
-            />
-          </NavSection>
-        )}
+            <NavSection title="Administración">
+              <NavItem
+                to="/usuarios"
+                icon={FaUsers}
+                label="Usuarios"
+                onClick={cerrarMenuMovil}
+              />
+              <NavItem
+                to="/categorias"
+                icon={FaBoxesStacked}
+                label="Categorías"
+                onClick={cerrarMenuMovil}
+              />
+            </NavSection>
+          )}
 
         {puedeVerReportes && (
           <NavSection title="Reportes">
